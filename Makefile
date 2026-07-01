@@ -5,29 +5,38 @@
 # Run `make help` to see available commands.
 # ──────────────────────────────────────────────────────────────────────────────
 
-.PHONY: help install dev test lint format clean
+.PHONY: help install dev test lint format clean frontend frontend-install
 
 # ── Default target ────────────────────────────────────────────────────────────
 help:
 	@echo ""
 	@echo "  Financial Research Assistant"
 	@echo ""
-	@echo "  make install   Install Python dependencies"
-	@echo "  make dev       Start the FastAPI backend (with auto-reload)"
-	@echo "  make test      Run all backend tests"
-	@echo "  make lint      Check code with ruff"
-	@echo "  make format    Auto-format code with black"
-	@echo "  make clean     Remove generated files and caches"
+	@echo "  make install          Install Python dependencies"
+	@echo "  make frontend-install Install frontend npm dependencies"
+	@echo "  make dev              Start the FastAPI backend (with auto-reload)"
+	@echo "  make frontend         Start the React dev server (port 5173)"
+	@echo "  make test             Run all backend tests"
+	@echo "  make lint             Check code with ruff"
+	@echo "  make format           Auto-format code with black"
+	@echo "  make clean            Remove generated files and caches"
 	@echo ""
 
 # ── Install ───────────────────────────────────────────────────────────────────
 install:
 	.venv/bin/pip install -r backend/requirements.txt
 
-# ── Development server ────────────────────────────────────────────────────────
+frontend-install:
+	cd frontend && npm install
+
+# ── Development servers ───────────────────────────────────────────────────────
 # --reload: automatically restarts the server when you save a file.
 dev:
 	.venv/bin/uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+
+# Vite proxies /api/* to localhost:8000 — run `make dev` in a separate terminal.
+frontend:
+	cd frontend && npm run dev
 
 # ── Tests ─────────────────────────────────────────────────────────────────────
 test:
