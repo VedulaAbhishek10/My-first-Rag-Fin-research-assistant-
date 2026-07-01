@@ -18,6 +18,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from backend.api.routes.chat import router as chat_router
 from backend.api.routes.documents import router as documents_router
 from backend.config import get_settings
 from backend.logging_config import get_logger, setup_logging
@@ -78,6 +79,7 @@ app.add_middleware(
 )
 
 app.include_router(documents_router)
+app.include_router(chat_router)
 
 
 # ── Health Endpoint ───────────────────────────────────────────────────────────
