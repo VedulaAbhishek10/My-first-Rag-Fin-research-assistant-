@@ -18,6 +18,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from backend.api.routes.documents import router as documents_router
 from backend.config import get_settings
 from backend.logging_config import get_logger, setup_logging
 
@@ -75,6 +76,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(documents_router)
 
 
 # ── Health Endpoint ───────────────────────────────────────────────────────────
