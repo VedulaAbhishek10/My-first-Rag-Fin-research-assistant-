@@ -28,6 +28,10 @@ from backend.models.chunk import ChunkWithEmbedding
 
 logger = get_logger(__name__)
 
+# ChromaDB's internal HNSW index rejects batches larger than this.
+# We stay well below the hard limit (5461) to be safe with large documents.
+_CHROMA_MAX_BATCH_SIZE = 500
+
 
 @dataclass
 class SearchResult:
@@ -59,32 +63,39 @@ class ChromaVectorStore:
         """
         Store chunk text + embedding vectors in ChromaDB.
 
-        Metadata fields (company, ticker, year, etc.) are stored alongside
-        each vector so we can filter by them in Phase 2 (hybrid search).
+        Large documents are written in batches of _CHROMA_MAX_BATCH_SIZE to
+        stay within ChromaDB's internal HNSW index limit (~5461 per call).
+        Metadata fields are stored alongside each vector for Phase 2 filtering.
         """
         if not chunks:
             return
 
-        self._collection.add(
-            ids=[c.id for c in chunks],
-            embeddings=[c.embedding for c in chunks],
-            documents=[c.text for c in chunks],
-            metadatas=[
-                {
-                    "document_id": c.document_id,
-                    "page_number": c.page_number or 0,
-                    "chunk_index": c.chunk_index,
-                    "company": c.metadata.company,
-                    "ticker": c.metadata.ticker or "",
-                    "year": c.metadata.year or 0,
-                    "quarter": c.metadata.quarter or "",
-                    "doc_type": str(c.metadata.doc_type),
-                    "source": c.metadata.source,
-                }
-                for c in chunks
-            ],
-        )
-        logger.info("Added %d chunks to ChromaDB", len(chunks))
+        total = len(chunks)
+        for batch_start in range(0, total, _CHROMA_MAX_BATCH_SIZE):
+            batch = chunks[batch_start : batch_start + _CHROMA_MAX_BATCH_SIZE]
+            self._collection.add(
+                ids=[c.id for c in batch],
+                embeddings=[c.embedding for c in batch],
+                documents=[c.text for c in batch],
+                metadatas=[
+                    {
+                        "document_id": c.document_id,
+                        "page_number": c.page_number or 0,
+                        "chunk_index": c.chunk_index,
+                        "company": c.metadata.company,
+                        "ticker": c.metadata.ticker or "",
+                        "year": c.metadata.year or 0,
+                        "quarter": c.metadata.quarter or "",
+                        "doc_type": str(c.metadata.doc_type),
+                        "source": c.metadata.source,
+                    }
+                    for c in batch
+                ],
+            )
+            logger.info(
+                "ChromaDB: stored %d/%d chunks", batch_start + len(batch), total
+            )
+        logger.info("Added %d chunks to ChromaDB in total", total)
 
     def search(
         self,
