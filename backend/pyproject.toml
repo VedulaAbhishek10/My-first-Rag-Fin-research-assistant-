@@ -1,0 +1,37 @@
+[project]
+name = "financial-rag-backend"
+version = "0.1.0"
+description = "Financial Research Assistant — RAG backend"
+requires-python = ">=3.11"
+
+# ── Black (code formatter) ────────────────────────────────────────────────────
+# Black enforces a single, consistent code style automatically.
+# Run with: make format
+[tool.black]
+line-length = 88
+target-version = ["py311", "py312"]
+
+# ── Ruff (linter) ─────────────────────────────────────────────────────────────
+# Ruff is an extremely fast linter that catches bugs and style issues.
+# Run with: make lint
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes (unused imports, undefined names)
+    "I",   # isort (import ordering)
+    "N",   # pep8 naming conventions
+    "W",   # pycodestyle warnings
+    "UP",  # pyupgrade (modern Python idioms)
+]
+
+# ── Pytest ────────────────────────────────────────────────────────────────────
+# Run with: make test
+[tool.pytest.ini_options]
+addopts = "-v --tb=short"
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]

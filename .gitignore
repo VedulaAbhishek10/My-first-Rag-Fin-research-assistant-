@@ -1,0 +1,36 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ── Environment (secrets) ─────────────────────────────────────────────────────
+# .env.example is committed — .env is NOT.
+.env
+*.env
+!.env.example
+
+# ── Application data ──────────────────────────────────────────────────────────
+# ChromaDB storage, uploaded documents, and the SQLite database are
+# machine-specific and should not be in version control.
+data/
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Frontend ──────────────────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.env
