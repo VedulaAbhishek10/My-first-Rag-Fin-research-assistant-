@@ -5,21 +5,37 @@
 //   (it needs a request body with the question). So we use fetch() with a
 //   ReadableStream reader and manually parse the "data: ...\n\n" SSE lines.
 
-import type { StreamChunk } from '../types';
+import type { SearchFilters, StreamChunk } from '../types';
 
 const BASE = '/api/chat';
+
+// Drop undefined/empty fields so we only send active filters to the backend.
+// An all-empty object becomes undefined, which the backend reads as "no filter".
+function cleanFilters(filters?: SearchFilters): SearchFilters | undefined {
+  if (!filters) return undefined;
+  const active = Object.fromEntries(
+    Object.entries(filters).filter(([, v]) => v !== undefined && v !== ''),
+  );
+  return Object.keys(active).length > 0 ? active : undefined;
+}
 
 // Streams tokens from POST /api/chat/stream.
 // Yields one StreamChunk per SSE event. The last chunk has done=true and citations.
 export async function* streamQuery(
   question: string,
   sessionId: string,
+  filters?: SearchFilters,
   topK = 5,
 ): AsyncGenerator<StreamChunk> {
   const response = await fetch(`${BASE}/stream`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ question, session_id: sessionId, top_k: topK }),
+    body: JSON.stringify({
+      question,
+      session_id: sessionId,
+      top_k: topK,
+      filters: cleanFilters(filters),
+    }),
   });
 
   if (!response.ok) {

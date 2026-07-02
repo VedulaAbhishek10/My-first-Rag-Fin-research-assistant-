@@ -54,6 +54,7 @@ async def query(
         question=request.question,
         session_id=request.session_id or str(uuid.uuid4()),
         top_k=request.top_k,
+        filters=request.filters,
     )
 
 
@@ -85,6 +86,7 @@ async def stream_query(
                 question=request.question,
                 session_id=session_id,
                 top_k=request.top_k,
+                filters=request.filters,
             ):
                 yield f"data: {chunk.model_dump_json()}\n\n"
         except Exception as exc:
@@ -117,6 +119,7 @@ async def clear_session(
 
 
 # ── Helper ────────────────────────────────────────────────────────────────────
+
 
 def _check_ollama(chat_service: ChatService) -> None:
     """Raise 503 with a clear message if Ollama is not reachable."""

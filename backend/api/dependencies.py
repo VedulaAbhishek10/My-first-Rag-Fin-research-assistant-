@@ -22,12 +22,15 @@ from backend.embeddings.embedding_model import EmbeddingModel, get_embedding_mod
 from backend.ingestion.pipeline import IngestionPipeline
 from backend.llm.ollama_client import OllamaClient
 from backend.reranking.reranker import BaseReranker, NoOpReranker
+from backend.retrieval.bm25_index import BM25Index
+from backend.retrieval.hybrid_retriever import HybridRetriever
 from backend.retrieval.retriever import Retriever
 from backend.services.chat_service import ChatService
 from backend.services.memory import ConversationMemory
 from backend.vectorstore.chroma_store import ChromaVectorStore
 
 # ── Ingestion dependencies ─────────────────────────────────────────────────────
+
 
 @lru_cache(maxsize=1)
 def get_chunker() -> TextChunker:
@@ -74,6 +77,7 @@ def get_ingestion_pipeline() -> IngestionPipeline:
 
 # ── Query / chat dependencies ──────────────────────────────────────────────────
 
+
 @lru_cache(maxsize=1)
 def get_ollama_client() -> OllamaClient:
     """Return the Ollama LLM client singleton."""
@@ -98,17 +102,41 @@ def get_memory() -> ConversationMemory:
 
 
 def get_retriever() -> Retriever:
-    """Assemble the retriever from its dependencies."""
+    """Assemble the dense (embedding) retriever from its dependencies."""
     return Retriever(
         vector_store=get_vector_store(),
         embedding_model=get_embedding_model_dep(),
     )
 
 
+@lru_cache(maxsize=1)
+def get_bm25_index() -> BM25Index:
+    """
+    Return the BM25 keyword index singleton (M5).
+
+    Cached because the index holds the tokenized corpus in memory. It rebuilds
+    itself lazily whenever the vector store's chunk count changes, so the same
+    instance stays correct after uploads and deletions.
+    """
+    return BM25Index(vector_store=get_vector_store())
+
+
+def get_hybrid_retriever() -> HybridRetriever:
+    """Assemble the hybrid retriever (dense + BM25) from settings."""
+    settings = get_settings()
+    return HybridRetriever(
+        dense_retriever=get_retriever(),
+        bm25_index=get_bm25_index(),
+        rrf_k=settings.rrf_k,
+        candidate_pool=settings.hybrid_candidate_pool,
+        hybrid_enabled=settings.hybrid_enabled,
+    )
+
+
 def get_chat_service() -> ChatService:
     """Assemble the ChatService with all its dependencies."""
     return ChatService(
-        retriever=get_retriever(),
+        retriever=get_hybrid_retriever(),
         reranker=get_reranker(),
         llm=get_ollama_client(),
         memory=get_memory(),

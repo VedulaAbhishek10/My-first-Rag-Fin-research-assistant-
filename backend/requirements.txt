@@ -10,6 +10,9 @@ pydantic-settings==2.14.2  # loads settings from .env file
 # ── Vector Store ──────────────────────────────────────────────────────────────
 chromadb==1.5.9
 
+# ── Keyword Search (Hybrid Retrieval) ─────────────────────────────────────────
+rank-bm25==0.2.2          # pure-Python BM25 ranking for hybrid search (M5)
+
 # ── Embeddings (HuggingFace) ──────────────────────────────────────────────────
 sentence-transformers==5.6.0  # wraps the BAAI/bge-small-en-v1.5 model
 

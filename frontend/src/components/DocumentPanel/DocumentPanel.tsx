@@ -1,10 +1,15 @@
 import { UploadZone } from './UploadZone';
 import { DocumentList } from './DocumentList';
-import { useDocuments } from '../../hooks/useDocuments';
+import type { useDocuments } from '../../hooks/useDocuments';
 
-export function DocumentPanel() {
-  const { documents, isLoading, isUploading, uploadError, upload, fetchDocuments } =
-    useDocuments();
+interface Props {
+  // The shared document state, lifted to App so the ChatPanel filters stay in
+  // sync with uploads. Typed as the useDocuments hook's return value.
+  docs: ReturnType<typeof useDocuments>;
+}
+
+export function DocumentPanel({ docs }: Props) {
+  const { documents, isLoading, isUploading, uploadError, upload, fetchDocuments } = docs;
 
   return (
     <div className="document-panel">

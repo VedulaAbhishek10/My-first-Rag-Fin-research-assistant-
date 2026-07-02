@@ -40,8 +40,8 @@ class SearchResult:
     chunk_id: str
     document_id: str
     text: str
-    score: float       # cosine similarity in [0, 1]; higher = more relevant
-    metadata: dict     # raw ChromaDB metadata dict
+    score: float  # cosine similarity in [0, 1]; higher = more relevant
+    metadata: dict  # raw ChromaDB metadata dict
 
 
 class ChromaVectorStore:
@@ -101,6 +101,7 @@ class ChromaVectorStore:
         self,
         query_embedding: list[float],
         top_k: int = 5,
+        where: dict | None = None,
     ) -> list[SearchResult]:
         """
         Find the top_k most semantically similar chunks.
@@ -108,6 +109,9 @@ class ChromaVectorStore:
         Args:
             query_embedding: The embedded query vector.
             top_k:           How many results to return.
+            where:           Optional ChromaDB metadata filter (M5). When
+                             provided, only chunks matching the filter are
+                             considered. See SearchFilters.to_chroma_where().
 
         Returns:
             Results sorted by similarity score (highest first).
@@ -117,12 +121,18 @@ class ChromaVectorStore:
             logger.warning("ChromaDB collection is empty — no results to return")
             return []
 
+        # Cap n_results at the collection size so ChromaDB doesn't complain.
+        # A metadata filter may leave fewer matches than actual_k; ChromaDB
+        # simply returns however many satisfy the filter.
         actual_k = min(top_k, total)
-        results = self._collection.query(
-            query_embeddings=[query_embedding],
-            n_results=actual_k,
-            include=["documents", "metadatas", "distances"],
-        )
+        query_kwargs = {
+            "query_embeddings": [query_embedding],
+            "n_results": actual_k,
+            "include": ["documents", "metadatas", "distances"],
+        }
+        if where is not None:
+            query_kwargs["where"] = where
+        results = self._collection.query(**query_kwargs)
 
         search_results: list[SearchResult] = []
         for chunk_id, text, meta, distance in zip(
@@ -144,6 +154,34 @@ class ChromaVectorStore:
             )
 
         return search_results
+
+    def get_all_chunks(self) -> list[SearchResult]:
+        """
+        Return every stored chunk (id, text, metadata) with score 0.0.
+
+        The BM25 keyword index (M5) needs the full text of the whole corpus in
+        memory to build its term statistics. ChromaDB owns that text, so we pull
+        it out here. The `score` field is unused for BM25 (it ranks by keyword
+        overlap, not cosine distance), hence 0.0.
+
+        Returns an empty list when the collection is empty.
+        """
+        if self._collection.count() == 0:
+            return []
+
+        stored = self._collection.get(include=["documents", "metadatas"])
+        return [
+            SearchResult(
+                chunk_id=chunk_id,
+                document_id=meta.get("document_id", ""),
+                text=text,
+                score=0.0,
+                metadata=meta,
+            )
+            for chunk_id, text, meta in zip(
+                stored["ids"], stored["documents"], stored["metadatas"]
+            )
+        ]
 
     def delete_document(self, document_id: str) -> None:
         """Remove all chunks that belong to a given document."""

@@ -53,6 +53,16 @@ export interface UploadResponse {
   message: string;
 }
 
+// Optional metadata filters sent with a query (M5).
+// Mirrors backend SearchFilters. A field left undefined means "don't filter".
+export interface SearchFilters {
+  company?: string;
+  ticker?: string;
+  year?: number;
+  quarter?: string;
+  doc_type?: string;
+}
+
 // A single message in the chat UI. Not from the backend — built locally.
 export interface Message {
   id: string;

@@ -7,7 +7,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { streamQuery, clearSession } from '../api/chat';
-import type { Message } from '../types';
+import type { Message, SearchFilters } from '../types';
 
 export function useChat() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -17,7 +17,7 @@ export function useChat() {
   const sessionId = useRef<string>(crypto.randomUUID());
 
   const sendMessage = useCallback(
-    async (question: string) => {
+    async (question: string, filters?: SearchFilters) => {
       if (isStreaming || !question.trim()) return;
 
       const userMsg: Message = {
@@ -40,7 +40,7 @@ export function useChat() {
       setError(null);
 
       try {
-        for await (const chunk of streamQuery(question, sessionId.current)) {
+        for await (const chunk of streamQuery(question, sessionId.current, filters)) {
           if (chunk.done) {
             // Final event — attach citations and mark streaming complete.
             setMessages(prev =>

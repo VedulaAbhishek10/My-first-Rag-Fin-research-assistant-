@@ -278,6 +278,58 @@ html, body, #root {
   flex-shrink: 0;
 }
 
+/* ── Filter bar (M5) ─────────────────────────────────────────────────────────── */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+  flex-shrink: 0;
+}
+
+.filter-bar-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.filter-bar select {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1e293b;
+  padding: 5px 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.filter-bar select:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.filter-bar-clear {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: none;
+  color: #64748b;
+  padding: 5px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.filter-bar-clear:hover:not(:disabled) {
+  background: #f1f5f9;
+  color: #1e293b;
+  border-color: #cbd5e1;
+}
+
 /* ── Message list ────────────────────────────────────────────────────────────── */
 .message-list {
   flex: 1;

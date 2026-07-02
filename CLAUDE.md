@@ -38,12 +38,15 @@ make format       # black
 - **SSE streaming**: uses `fetch()` + `ReadableStream` (not `EventSource`) because the stream endpoint is POST
 - **Vite proxy**: `/api/*` → `localhost:8000` — no CORS config needed in dev
 - **ChromaDB batch limit**: hard limit ~5461; we batch at 500 chunks max
+- **Hybrid search fusion**: Reciprocal Rank Fusion (RRF, k=60), not weighted score blending — no fragile cross-scale normalization between cosine and BM25
+- **BM25 index freshness**: rebuilt lazily when `collection.count()` changes; a chunk is a keyword "hit" by token overlap, not `score > 0` (common terms get zero/negative IDF)
 
 ## Completed milestones
 - M1: Foundation — config, logging, Pydantic models, `/health`
 - M2: Document ingestion — PDF/HTML/TXT parsing, chunking, embedding, ChromaDB + SQLite, upload API
 - M3: RAG query pipeline — retriever, reranker, Ollama streaming, citations, conversation memory, SSE chat API
 - M4: React frontend — two-panel UI (documents + chat), SSE token streaming, citations panel, drag-and-drop upload
+- M5: Hybrid search + metadata filtering (Phase 2) — BM25 (`rank-bm25`) fused with dense retrieval via RRF; `SearchFilters` (company/year/quarter/doc_type) applied to both retrievers; frontend `FilterBar` with options derived from loaded documents
 
 ## Important file locations
 - Backend entry: `backend/main.py`

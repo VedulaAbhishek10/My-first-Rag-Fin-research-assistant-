@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        extra="ignore",        # silently ignore unknown env vars
+        extra="ignore",  # silently ignore unknown env vars
         case_sensitive=False,  # OLLAMA_MODEL and ollama_model both work
     )
 
@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     # BAAI/bge-small-en-v1.5 is a small, fast model that works well for
     # financial text retrieval without requiring a GPU.
     embedding_model: str = "BAAI/bge-small-en-v1.5"
-    embedding_device: str = "cpu"   # change to "cuda" if you have a GPU
+    embedding_device: str = "cpu"  # change to "cuda" if you have a GPU
     embedding_batch_size: int = Field(default=32, ge=1)
 
     # ── ChromaDB (Vector Store) ───────────────────────────────────────────────
@@ -71,6 +71,19 @@ class Settings(BaseSettings):
 
     # ── Retrieval ─────────────────────────────────────────────────────────────
     retrieval_top_k: int = Field(default=5, ge=1, le=20)
+
+    # ── Hybrid Search (M5) ────────────────────────────────────────────────────
+    # hybrid_enabled: when True, blend dense (embedding) + BM25 (keyword) search.
+    #   Set to False to fall back to pure dense retrieval.
+    # hybrid_candidate_pool: how many candidates each retriever contributes to
+    #   the fusion step. Larger = better recall but slower. We fuse these down
+    #   to `top_k` final results.
+    # rrf_k: the constant in Reciprocal Rank Fusion (score = 1 / (rrf_k + rank)).
+    #   60 is the widely-used default from the original RRF paper; it controls
+    #   how quickly a result's contribution decays as its rank gets worse.
+    hybrid_enabled: bool = True
+    hybrid_candidate_pool: int = Field(default=30, ge=1, le=200)
+    rrf_k: int = Field(default=60, ge=1)
 
 
 @lru_cache(maxsize=1)

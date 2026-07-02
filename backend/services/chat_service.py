@@ -24,9 +24,14 @@ from collections.abc import AsyncGenerator
 from backend.llm.ollama_client import OllamaClient
 from backend.llm.prompt_builder import build_messages
 from backend.logging_config import get_logger
-from backend.models.query import Citation, QueryResponse, StreamChunk
+from backend.models.query import (
+    Citation,
+    QueryResponse,
+    SearchFilters,
+    StreamChunk,
+)
 from backend.reranking.reranker import BaseReranker
-from backend.retrieval.retriever import Retriever
+from backend.retrieval.hybrid_retriever import HybridRetriever
 from backend.services.memory import ConversationMemory
 from backend.vectorstore.chroma_store import SearchResult
 
@@ -38,7 +43,7 @@ class ChatService:
 
     def __init__(
         self,
-        retriever: Retriever,
+        retriever: HybridRetriever,
         reranker: BaseReranker,
         llm: OllamaClient,
         memory: ConversationMemory,
@@ -53,6 +58,7 @@ class ChatService:
         question: str,
         session_id: str | None = None,
         top_k: int = 5,
+        filters: SearchFilters | None = None,
     ) -> QueryResponse:
         """
         Run the full RAG pipeline and return the complete answer.
@@ -63,7 +69,7 @@ class ChatService:
         session_id = session_id or str(uuid.uuid4())
         start = time.perf_counter()
 
-        results = self._get_results(question, top_k)
+        results = self._get_results(question, top_k, filters)
         citations = self._to_citations(results)
         messages = build_messages(
             question=question,
@@ -91,6 +97,7 @@ class ChatService:
         question: str,
         session_id: str | None = None,
         top_k: int = 5,
+        filters: SearchFilters | None = None,
     ) -> AsyncGenerator[StreamChunk, None]:
         """
         Stream the RAG answer token by token.
@@ -101,7 +108,7 @@ class ChatService:
         """
         session_id = session_id or str(uuid.uuid4())
 
-        results = self._get_results(question, top_k)
+        results = self._get_results(question, top_k, filters)
         citations = self._to_citations(results)
         messages = build_messages(
             question=question,
@@ -126,9 +133,14 @@ class ChatService:
 
     # ── Internal helpers ──────────────────────────────────────────────────────
 
-    def _get_results(self, question: str, top_k: int) -> list[SearchResult]:
-        """Retrieve then rerank (NoOp in Phase 1)."""
-        results = self._retriever.retrieve(question, top_k=top_k)
+    def _get_results(
+        self,
+        question: str,
+        top_k: int,
+        filters: SearchFilters | None = None,
+    ) -> list[SearchResult]:
+        """Retrieve (hybrid dense + BM25, optionally filtered) then rerank."""
+        results = self._retriever.retrieve(question, top_k=top_k, filters=filters)
         return self._reranker.rerank(question, results)
 
     def _to_citations(self, results: list[SearchResult]) -> list[Citation]:
