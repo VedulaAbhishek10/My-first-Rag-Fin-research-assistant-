@@ -15,37 +15,10 @@ import re
 from pathlib import Path
 
 from backend.models.document import DocumentMetadata, DocumentType
+from backend.utils.financial_metadata_catalog import COMPANY_ALIASES, DOC_TYPE_ALIASES
 
 _YEAR_PATTERN = re.compile(r"\b(20\d{2})\b")
 _QUARTER_PATTERN = re.compile(r"\b[Qq]([1-4])\b")
-
-_DOC_TYPE_KEYWORDS: dict[str, DocumentType] = {
-    "10-k": DocumentType.ANNUAL_REPORT,
-    "10k": DocumentType.ANNUAL_REPORT,
-    "annual": DocumentType.ANNUAL_REPORT,
-    "10-q": DocumentType.QUARTERLY_REPORT,
-    "10q": DocumentType.QUARTERLY_REPORT,
-    "quarterly": DocumentType.QUARTERLY_REPORT,
-    "earnings": DocumentType.EARNINGS_CALL,
-    "transcript": DocumentType.EARNINGS_CALL,
-    "call": DocumentType.EARNINGS_CALL,
-    "news": DocumentType.NEWS_ARTICLE,
-    "article": DocumentType.NEWS_ARTICLE,
-}
-
-# Company name substring → (display name, ticker)
-_KNOWN_COMPANIES: dict[str, tuple[str, str]] = {
-    "apple": ("Apple Inc.", "AAPL"),
-    "microsoft": ("Microsoft Corporation", "MSFT"),
-    "nvidia": ("NVIDIA Corporation", "NVDA"),
-    "tesla": ("Tesla, Inc.", "TSLA"),
-    "amazon": ("Amazon.com, Inc.", "AMZN"),
-    "alphabet": ("Alphabet Inc.", "GOOGL"),
-    "google": ("Alphabet Inc.", "GOOGL"),
-    "meta": ("Meta Platforms, Inc.", "META"),
-    "netflix": ("Netflix, Inc.", "NFLX"),
-    "salesforce": ("Salesforce, Inc.", "CRM"),
-}
 
 
 def extract_metadata_from_filename(filename: str) -> DocumentMetadata:
@@ -74,15 +47,15 @@ def extract_metadata_from_filename(filename: str) -> DocumentMetadata:
 
     # ── Document type (check longest keyword first to avoid partial matches) ──
     doc_type = DocumentType.OTHER
-    for keyword in sorted(_DOC_TYPE_KEYWORDS, key=len, reverse=True):
+    for keyword in sorted(DOC_TYPE_ALIASES, key=len, reverse=True):
         if keyword in normalized:
-            doc_type = _DOC_TYPE_KEYWORDS[keyword]
+            doc_type = DOC_TYPE_ALIASES[keyword]
             break
 
     # ── Company + ticker ──────────────────────────────────────────────────────
     company = ""
     ticker: str | None = None
-    for key, (company_name, ticker_symbol) in _KNOWN_COMPANIES.items():
+    for key, (company_name, ticker_symbol) in COMPANY_ALIASES.items():
         if key in normalized:
             company = company_name
             ticker = ticker_symbol

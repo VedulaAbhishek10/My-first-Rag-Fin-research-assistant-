@@ -32,7 +32,9 @@ from backend.models.query import (
 )
 from backend.reranking.reranker import BaseReranker
 from backend.retrieval.hybrid_retriever import HybridRetriever
+from backend.retrieval.timeline import TimelineQueryAnalyzer
 from backend.services.memory import ConversationMemory
+from backend.services.query_entity_extractor import QueryEntityExtractor
 from backend.vectorstore.chroma_store import SearchResult
 
 logger = get_logger(__name__)
@@ -47,11 +49,15 @@ class ChatService:
         reranker: BaseReranker,
         llm: OllamaClient,
         memory: ConversationMemory,
+        query_entity_extractor: QueryEntityExtractor,
+        timeline_query_analyzer: TimelineQueryAnalyzer,
     ) -> None:
         self._retriever = retriever
         self._reranker = reranker
         self._llm = llm
         self._memory = memory
+        self._query_entity_extractor = query_entity_extractor
+        self._timeline_query_analyzer = timeline_query_analyzer
 
     async def query(
         self,
@@ -68,8 +74,10 @@ class ChatService:
         """
         session_id = session_id or str(uuid.uuid4())
         start = time.perf_counter()
+        effective_filters = self._resolve_filters(question, filters)
+        timeline = self._timeline_query_analyzer.analyze(question)
 
-        results = self._get_results(question, top_k, filters)
+        results = self._get_results(question, top_k, effective_filters, timeline)
         citations = self._to_citations(results)
         messages = build_messages(
             question=question,
@@ -107,8 +115,10 @@ class ChatService:
             StreamChunk(citations=[...], done=True) — final chunk, carries citations
         """
         session_id = session_id or str(uuid.uuid4())
+        effective_filters = self._resolve_filters(question, filters)
+        timeline = self._timeline_query_analyzer.analyze(question)
 
-        results = self._get_results(question, top_k, filters)
+        results = self._get_results(question, top_k, effective_filters, timeline)
         citations = self._to_citations(results)
         messages = build_messages(
             question=question,
@@ -138,10 +148,28 @@ class ChatService:
         question: str,
         top_k: int,
         filters: SearchFilters | None = None,
+        timeline=None,
     ) -> list[SearchResult]:
         """Retrieve (hybrid dense + BM25, optionally filtered) then rerank."""
-        results = self._retriever.retrieve(question, top_k=top_k, filters=filters)
+        results = self._retriever.retrieve(
+            question,
+            top_k=top_k,
+            filters=filters,
+            timeline=timeline,
+        )
         return self._reranker.rerank(question, results)
+
+    def _resolve_filters(
+        self,
+        question: str,
+        filters: SearchFilters | None,
+    ) -> SearchFilters | None:
+        """Merge explicit filters with query-inferred filters, favoring explicit."""
+        inferred = self._query_entity_extractor.extract(question)
+        if filters is None:
+            return inferred
+        merged = filters.with_fallback(inferred)
+        return None if merged.is_empty() else merged
 
     def _to_citations(self, results: list[SearchResult]) -> list[Citation]:
         """Convert SearchResult objects into Citation Pydantic models."""
@@ -152,6 +180,11 @@ class ChatService:
                 page_number=r.metadata.get("page_number") or None,
                 chunk_text=r.text,
                 similarity_score=r.score,
+                company=r.metadata.get("company") or None,
+                ticker=r.metadata.get("ticker") or None,
+                year=r.metadata.get("year") or None,
+                quarter=r.metadata.get("quarter") or None,
+                doc_type=r.metadata.get("doc_type") or None,
             )
             for r in results
         ]

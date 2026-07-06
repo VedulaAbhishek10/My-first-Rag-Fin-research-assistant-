@@ -7,6 +7,11 @@ export interface Citation {
   page_number: number | null;
   chunk_text: string;
   similarity_score: number;
+  company?: string | null;
+  ticker?: string | null;
+  year?: number | null;
+  quarter?: string | null;
+  doc_type?: string | null;
 }
 
 // One chunk arriving over SSE from POST /api/chat/stream.

@@ -8,6 +8,7 @@ ChromaDB, embeddings, or rank-bm25 involved.
 
 from backend.models.query import SearchFilters
 from backend.retrieval.hybrid_retriever import HybridRetriever
+from backend.retrieval.timeline import TimelineQuery
 from backend.vectorstore.chroma_store import SearchResult
 
 
@@ -134,3 +135,14 @@ def test_result_count_capped_at_top_k() -> None:
     results = retriever.retrieve("q", top_k=4)
 
     assert len(results) == 4
+
+
+def test_timeline_query_expands_candidate_pool() -> None:
+    dense = FakeDense([_result(f"d{i}") for i in range(20)])
+    bm25 = FakeBM25([_result(f"b{i}") for i in range(20)])
+    retriever = HybridRetriever(dense, bm25, candidate_pool=5)
+
+    retriever.retrieve("q", top_k=4, timeline=TimelineQuery(enabled=True))
+
+    assert dense.last_call["top_k"] == 16
+    assert bm25.last_call["top_k"] == 16

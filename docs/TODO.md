@@ -18,16 +18,16 @@
 
 ## Phase 2
 
-- [ ] BM25
-- [ ] Hybrid Search
-- [ ] Timeline Search
-- [ ] Filters
-- [ ] Entity Extraction
+- [x] BM25
+- [x] Hybrid Search
+- [x] Timeline Search
+- [x] Filters
+- [x] Entity Extraction
 
 ## Phase 3
 
 - [ ] Knowledge Graph
-- [ ] RAGAS
+- [x] Evaluation Harness
 - [ ] Analytics Dashboard
-- [ ] Docker
-- [ ] CI/CD
+- [x] Docker
+- [x] CI/CD

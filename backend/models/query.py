@@ -79,6 +79,24 @@ class SearchFilters(BaseModel):
             metadata.get(field) == value for field, value in self._active_pairs()
         )
 
+    def with_fallback(self, fallback: "SearchFilters | None") -> "SearchFilters":
+        """
+        Fill missing fields from a fallback filter set.
+
+        This is used for query-time entity extraction in M6: explicit filters
+        from the client must win, but inferred filters are still useful when the
+        user simply writes "Apple 10-K 2024" in the question text.
+        """
+        if fallback is None:
+            return self
+        return SearchFilters(
+            company=self.company or fallback.company,
+            ticker=self.ticker or fallback.ticker,
+            year=self.year or fallback.year,
+            quarter=self.quarter or fallback.quarter,
+            doc_type=self.doc_type or fallback.doc_type,
+        )
+
     def _active_pairs(self) -> list[tuple[str, object]]:
         """Return (field_name, stored_value) for each filter that is set."""
         # doc_type is a StrEnum; str() yields the same value stored in ChromaDB
@@ -141,6 +159,11 @@ class Citation(BaseModel):
     similarity_score: float = Field(
         description="Cosine similarity score (0–1, higher = more relevant)"
     )
+    company: str | None = Field(default=None, description="Company metadata")
+    ticker: str | None = Field(default=None, description="Ticker metadata")
+    year: int | None = Field(default=None, description="Fiscal year metadata")
+    quarter: str | None = Field(default=None, description="Quarter metadata")
+    doc_type: str | None = Field(default=None, description="Document type metadata")
 
 
 class QueryResponse(BaseModel):

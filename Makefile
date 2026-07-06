@@ -5,7 +5,7 @@
 # Run `make help` to see available commands.
 # ──────────────────────────────────────────────────────────────────────────────
 
-.PHONY: help install dev test lint format clean frontend frontend-install
+.PHONY: help install dev test lint format clean frontend frontend-install evaluate
 
 # ── Default target ────────────────────────────────────────────────────────────
 help:
@@ -17,6 +17,7 @@ help:
 	@echo "  make dev              Start the FastAPI backend (with auto-reload)"
 	@echo "  make frontend         Start the React dev server (port 5173)"
 	@echo "  make test             Run all backend tests"
+	@echo "  make evaluate         Run offline M6 evaluation cases"
 	@echo "  make lint             Check code with ruff"
 	@echo "  make format           Auto-format code with black"
 	@echo "  make clean            Remove generated files and caches"
@@ -41,6 +42,9 @@ frontend:
 # ── Tests ─────────────────────────────────────────────────────────────────────
 test:
 	.venv/bin/pytest backend/tests/ -v
+
+evaluate:
+	.venv/bin/python -m backend.evaluation.run_evaluation
 
 # ── Linting ───────────────────────────────────────────────────────────────────
 lint:

@@ -29,6 +29,7 @@ from backend.models.query import SearchFilters
 from backend.retrieval.bm25_index import BM25Index
 from backend.retrieval.fusion import reciprocal_rank_fusion
 from backend.retrieval.retriever import Retriever
+from backend.retrieval.timeline import TimelineQuery, order_timeline_results
 from backend.vectorstore.chroma_store import SearchResult
 
 logger = get_logger(__name__)
@@ -56,6 +57,7 @@ class HybridRetriever:
         query: str,
         top_k: int = 5,
         filters: SearchFilters | None = None,
+        timeline: TimelineQuery | None = None,
     ) -> list[SearchResult]:
         """
         Retrieve the top_k chunks using hybrid dense + BM25 search.
@@ -70,21 +72,34 @@ class HybridRetriever:
             back to dense-only results when hybrid is disabled or BM25 finds
             nothing.
         """
+        candidate_pool = self._candidate_pool
+        if timeline is not None and timeline.enabled:
+            candidate_pool = max(candidate_pool, top_k * 4)
+
         if not self._hybrid_enabled:
-            return self._dense.retrieve(query, top_k=top_k, filters=filters)
+            dense_only = self._dense.retrieve(
+                query,
+                top_k=candidate_pool,
+                filters=filters,
+            )
+            if timeline is None:
+                return dense_only[:top_k]
+            return order_timeline_results(dense_only, top_k=top_k, timeline=timeline)
 
         # Pull a wider candidate pool from each retriever so fusion has enough
         # to work with, then narrow to top_k after merging.
         dense_results = self._dense.retrieve(
-            query, top_k=self._candidate_pool, filters=filters
+            query, top_k=candidate_pool, filters=filters
         )
         bm25_results = self._bm25.search(
-            query, top_k=self._candidate_pool, filters=filters
+            query, top_k=candidate_pool, filters=filters
         )
 
         if not bm25_results:
             # No keyword signal (or empty index) — dense ranking is all we have.
-            return dense_results[:top_k]
+            if timeline is None:
+                return dense_results[:top_k]
+            return order_timeline_results(dense_results, top_k=top_k, timeline=timeline)
 
         # Build an id → SearchResult lookup. Insert dense first so its cosine
         # score is the one we display when a chunk is found by both retrievers.
@@ -105,4 +120,7 @@ class HybridRetriever:
             len(fused_ids),
             min(top_k, len(fused_ids)),
         )
-        return [by_id[chunk_id] for chunk_id in fused_ids[:top_k]]
+        fused_results = [by_id[chunk_id] for chunk_id in fused_ids]
+        if timeline is None:
+            return fused_results[:top_k]
+        return order_timeline_results(fused_results, top_k=top_k, timeline=timeline)

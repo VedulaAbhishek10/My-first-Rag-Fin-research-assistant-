@@ -8,10 +8,13 @@ or ChromaDB being available.
 import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
-from backend.models.query import QueryResponse
+from backend.models.document import DocumentType
+from backend.models.query import QueryResponse, SearchFilters
 from backend.reranking.reranker import NoOpReranker
+from backend.retrieval.timeline import TimelineQueryAnalyzer
 from backend.services.chat_service import ChatService
 from backend.services.memory import ConversationMemory
+from backend.services.query_entity_extractor import QueryEntityExtractor
 from backend.vectorstore.chroma_store import SearchResult
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -44,6 +47,8 @@ def _make_service(answer: str = "Test answer.") -> ChatService:
         reranker=NoOpReranker(),
         llm=mock_llm,
         memory=ConversationMemory(),
+        query_entity_extractor=QueryEntityExtractor(),
+        timeline_query_analyzer=TimelineQueryAnalyzer(),
     )
 
 
@@ -97,6 +102,7 @@ def test_query_includes_citations() -> None:
     assert len(result.citations) == 1
     assert result.citations[0].document_name == "apple.pdf"
     assert result.citations[0].similarity_score == 0.91
+    assert result.citations[0].year is None
 
 
 def test_query_stores_in_memory() -> None:
@@ -114,6 +120,37 @@ def test_query_returns_processing_time() -> None:
         service.query("Q?", session_id="s")
     )
     assert result.processing_time_ms >= 0
+
+
+def test_query_uses_inferred_filters_when_request_has_none() -> None:
+    service = _make_service()
+    asyncio.run(service.query("What did Apple say in its 2024 10-K?", session_id="s1"))
+    service._retriever.retrieve.assert_called_once()
+    filters = service._retriever.retrieve.call_args.kwargs["filters"]
+    assert filters == SearchFilters(
+        company="Apple Inc.",
+        ticker="AAPL",
+        year=2024,
+        doc_type=DocumentType.ANNUAL_REPORT,
+    )
+
+
+def test_query_prefers_explicit_filters_over_inferred_ones() -> None:
+    service = _make_service()
+    explicit = SearchFilters(company="Microsoft Corporation", year=2023)
+    asyncio.run(
+        service.query(
+            "Compare Apple 2024 results",
+            session_id="s1",
+            filters=explicit,
+        )
+    )
+    filters = service._retriever.retrieve.call_args.kwargs["filters"]
+    assert filters == SearchFilters(
+        company="Microsoft Corporation",
+        ticker="AAPL",
+        year=2023,
+    )
 
 
 # ── ChatService.stream_query ──────────────────────────────────────────────────
@@ -146,6 +183,33 @@ def test_stream_final_chunk_has_citations() -> None:
     final = asyncio.run(get_final())
     assert final.done is True
     assert final.citations[0].document_name == "apple.pdf"
+
+
+def test_citations_include_timeline_metadata_when_present() -> None:
+    service = _make_service("Revenue was strong.")
+    service._retriever.retrieve.return_value = [
+        SearchResult(
+            chunk_id="c1",
+            document_id="d1",
+            text="Revenue was $10B.",
+            score=0.91,
+            metadata={
+                "source": "apple-q1.pdf",
+                "page_number": 3,
+                "company": "Apple Inc.",
+                "ticker": "AAPL",
+                "year": 2024,
+                "quarter": "Q1",
+                "doc_type": "quarterly_report",
+            },
+        )
+    ]
+    result = asyncio.run(service.query("Compare Apple Q1 results", session_id="s1"))
+    citation = result.citations[0]
+    assert citation.company == "Apple Inc."
+    assert citation.ticker == "AAPL"
+    assert citation.year == 2024
+    assert citation.quarter == "Q1"
 
 
 # ── NoOpReranker ──────────────────────────────────────────────────────────────

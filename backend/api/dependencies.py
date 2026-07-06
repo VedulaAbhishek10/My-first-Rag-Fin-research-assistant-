@@ -25,8 +25,10 @@ from backend.reranking.reranker import BaseReranker, NoOpReranker
 from backend.retrieval.bm25_index import BM25Index
 from backend.retrieval.hybrid_retriever import HybridRetriever
 from backend.retrieval.retriever import Retriever
+from backend.retrieval.timeline import TimelineQueryAnalyzer
 from backend.services.chat_service import ChatService
 from backend.services.memory import ConversationMemory
+from backend.services.query_entity_extractor import QueryEntityExtractor
 from backend.vectorstore.chroma_store import ChromaVectorStore
 
 # ── Ingestion dependencies ─────────────────────────────────────────────────────
@@ -101,6 +103,18 @@ def get_memory() -> ConversationMemory:
     return ConversationMemory()
 
 
+@lru_cache(maxsize=1)
+def get_query_entity_extractor() -> QueryEntityExtractor:
+    """Return the rule-based query entity extractor singleton (M6.1)."""
+    return QueryEntityExtractor()
+
+
+@lru_cache(maxsize=1)
+def get_timeline_query_analyzer() -> TimelineQueryAnalyzer:
+    """Return the timeline intent analyzer singleton (M6.2)."""
+    return TimelineQueryAnalyzer()
+
+
 def get_retriever() -> Retriever:
     """Assemble the dense (embedding) retriever from its dependencies."""
     return Retriever(
@@ -140,4 +154,6 @@ def get_chat_service() -> ChatService:
         reranker=get_reranker(),
         llm=get_ollama_client(),
         memory=get_memory(),
+        query_entity_extractor=get_query_entity_extractor(),
+        timeline_query_analyzer=get_timeline_query_analyzer(),
     )

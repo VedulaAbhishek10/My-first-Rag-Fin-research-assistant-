@@ -137,9 +137,12 @@ def test_citation_creation() -> None:
         page_number=42,
         chunk_text="AI revenue grew 122% year over year.",
         similarity_score=0.91,
+        year=2024,
+        doc_type="annual_report",
     )
     assert citation.similarity_score == 0.91
     assert citation.page_number == 42
+    assert citation.year == 2024
 
 
 def test_citation_optional_page_number() -> None:

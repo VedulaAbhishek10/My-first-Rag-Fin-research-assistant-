@@ -47,6 +47,7 @@ make format       # black
 - M3: RAG query pipeline — retriever, reranker, Ollama streaming, citations, conversation memory, SSE chat API
 - M4: React frontend — two-panel UI (documents + chat), SSE token streaming, citations panel, drag-and-drop upload
 - M5: Hybrid search + metadata filtering (Phase 2) — BM25 (`rank-bm25`) fused with dense retrieval via RRF; `SearchFilters` (company/year/quarter/doc_type) applied to both retrievers; frontend `FilterBar` with options derived from loaded documents
+- M6: Retrieval intelligence + evaluation + production readiness — query-time entity extraction; timeline-aware retrieval that prefers chronologically diverse citations; offline evaluation harness (`make evaluate`); real Dockerfiles, compose setup, and Docker CI builds
 
 ## Important file locations
 - Backend entry: `backend/main.py`

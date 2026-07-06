@@ -1,0 +1,6 @@
+{"name":"annual-report-filter","question":"What changed in Apple's 2024 10-K?","expected_filters":{"company":"Apple Inc.","ticker":"AAPL","year":2024,"doc_type":"annual_report"},"expected_timeline":{"enabled":false,"years":[2024],"quarters":[]}}
+{"name":"quarterly-call-filter","question":"Summarize Nvidia's first quarter earnings call","expected_filters":{"company":"NVIDIA Corporation","ticker":"NVDA","quarter":"Q1","doc_type":"earnings_call"},"expected_timeline":{"enabled":false,"years":[],"quarters":["Q1"]}}
+{"name":"ticker-only-company","question":"How did MSFT perform in 2023?","expected_filters":{"company":"Microsoft Corporation","ticker":"MSFT","year":2023},"expected_timeline":{"enabled":false,"years":[2023],"quarters":[]}}
+{"name":"timeline-multi-year","question":"Show the timeline of Apple's margins from 2022 to 2024","expected_filters":{"company":"Apple Inc.","ticker":"AAPL"},"expected_timeline":{"enabled":true,"years":[2022,2024],"quarters":[]}}
+{"name":"timeline-multi-quarter","question":"Compare Q1 and Q4 revenue trends for Nvidia","expected_filters":{"company":"NVIDIA Corporation","ticker":"NVDA"},"expected_timeline":{"enabled":true,"years":[],"quarters":["Q1","Q4"]}}
+{"name":"no-entities","question":"What risks are discussed in these documents?","expected_timeline":{"enabled":false,"years":[],"quarters":[]}}

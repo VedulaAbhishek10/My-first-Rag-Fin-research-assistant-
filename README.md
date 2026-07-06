@@ -16,7 +16,7 @@ Question → Embed → Vector Search → Top-K Chunks → Ollama LLM → Answer 
 
 1. **Ingest** — Upload a financial document (PDF, TXT, HTML, MD). The pipeline parses it, splits it into overlapping chunks, embeds each chunk using a local sentence-transformer model, and stores the vectors in ChromaDB alongside metadata in SQLite.
 2. **Query** — Ask a question in plain English. The question is embedded, the closest chunks are retrieved from ChromaDB, and those chunks are passed to a local LLM (via Ollama) to generate a grounded answer.
-3. **Stream** — Answers stream token-by-token to the browser via Server-Sent Events (SSE). Citations show the source document, page number, and relevance score for every answer.
+3. **Stream** — Answers stream token-by-token to the browser via Server-Sent Events (SSE). Citations show the source document, page number, period metadata, and relevance score for every answer.
 
 ---
 
@@ -30,7 +30,7 @@ Question → Embed → Vector Search → Top-K Chunks → Ollama LLM → Answer 
 | Vector store | ChromaDB 1.5.9 — cosine similarity |
 | Database | SQLite (raw `sqlite3`, no ORM) |
 | Frontend | React 18, TypeScript, Vite |
-| Testing | pytest (78 tests) |
+| Testing | pytest + offline evaluation harness |
 | Linting | ruff + black |
 
 ---
@@ -94,6 +94,7 @@ The FastAPI interactive docs are at **http://localhost:8000/docs**.
 1. **Upload a document** — drag and drop a PDF/TXT/HTML into the left panel, or click to browse. The document is parsed, chunked, and embedded automatically. Large documents (thousands of pages) are supported.
 2. **Ask a question** — type in the chat box and press Enter. The answer streams in word by word.
 3. **Check citations** — every answer shows which document and page each piece of information came from, along with a relevance score.
+5. **Timeline questions** — ask questions like `Compare Apple's Q1 and Q4 margin trend` and the retriever will try to surface citations from multiple periods in chronological order.
 4. **New session** — click "New Session" to clear conversation history and start fresh.
 
 ---
@@ -149,12 +150,26 @@ The FastAPI interactive docs are at **http://localhost:8000/docs**.
 
 ```bash
 make test      # run 78 pytest tests
+make evaluate  # run offline M6 query-understanding evaluation
 make lint      # ruff check
 make format    # black auto-format
 make clean     # remove __pycache__, .pytest_cache, etc.
 ```
 
-CI runs automatically on every push via GitHub Actions — backend tests + lint on Python 3.11, frontend type check + build on Node 22.
+CI runs automatically on every push via GitHub Actions — backend tests + lint, frontend type check + build, and Docker image builds.
+
+---
+
+## Docker
+
+```bash
+docker compose up --build
+```
+
+Notes:
+- The backend container expects Ollama to be running on the host machine.
+- `docker-compose.yml` points `OLLAMA_BASE_URL` to `http://host.docker.internal:11434` by default so the container can reach the host Ollama daemon.
+- The frontend is served from Nginx on **http://localhost:5173** and proxies `/api/*` to the backend container.
 
 ---
 
