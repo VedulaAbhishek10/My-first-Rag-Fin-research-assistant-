@@ -2,19 +2,19 @@
 
 ## Phase 1
 
-- [ ] Project initialization
-- [ ] Configuration
-- [ ] Logging
-- [ ] Document parser
-- [ ] Metadata extractor
-- [ ] Chunker
-- [ ] Embeddings
-- [ ] ChromaDB
-- [ ] Retriever
-- [ ] Ollama wrapper
-- [ ] Prompt builder
-- [ ] Chat endpoint
-- [ ] React UI
+- [x] Project initialization
+- [x] Configuration
+- [x] Logging
+- [x] Document parser
+- [x] Metadata extractor
+- [x] Chunker
+- [x] Embeddings
+- [x] ChromaDB
+- [x] Retriever
+- [x] Ollama wrapper
+- [x] Prompt builder
+- [x] Chat endpoint
+- [x] React UI
 
 ## Phase 2
 
