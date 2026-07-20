@@ -36,3 +36,4 @@ frontend/dist/
 frontend/.env
 frontend/tsconfig.tsbuildinfo
 CLAUDE.md
+.aider*
