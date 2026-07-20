@@ -4,9 +4,10 @@ import type { Message } from '../../types';
 
 interface Props {
   messages: Message[];
+  onRetry: () => void;
 }
 
-export function MessageList({ messages }: Props) {
+export function MessageList({ messages, onRetry }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to the latest message whenever the list changes.
@@ -28,7 +29,14 @@ export function MessageList({ messages }: Props) {
   return (
     <div className="message-list">
       {messages.map(m => (
-        <MessageBubble key={m.id} message={m} />
+        <div key={m.id}>
+          <MessageBubble message={m} />
+          {m.role === 'assistant' && m.content.startsWith('Error:') && (
+            <button className="btn-secondary" onClick={onRetry}>
+              Retry
+            </button>
+          )}
+        </div>
       ))}
       <div ref={bottomRef} />
     </div>

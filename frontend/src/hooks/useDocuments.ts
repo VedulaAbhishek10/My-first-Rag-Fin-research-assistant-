@@ -1,7 +1,7 @@
 // useDocuments — manages the document list and file upload state.
 
 import { useState, useEffect, useCallback } from 'react';
-import { listDocuments, uploadDocument } from '../api/documents';
+import { listDocuments, uploadDocument, deleteDocument } from '../api/documents';
 import type { DocumentRecord } from '../types';
 
 export function useDocuments() {
@@ -43,5 +43,18 @@ export function useDocuments() {
     [fetchDocuments],
   );
 
-  return { documents, isLoading, isUploading, uploadError, upload, fetchDocuments };
+  const removeDocument = useCallback(
+    async (documentId: string) => {
+      try {
+        await deleteDocument(documentId);
+        setDocuments(prev => prev.filter(d => d.id !== documentId));
+      } catch (err) {
+        // Optionally handle error state here
+        console.error('Failed to delete document:', err);
+      }
+    },
+    [],
+  );
+
+  return { documents, isLoading, isUploading, uploadError, upload, fetchDocuments, removeDocument };
 }

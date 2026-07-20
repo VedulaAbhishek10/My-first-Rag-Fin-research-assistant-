@@ -78,6 +78,26 @@ export function useChat() {
     [isStreaming],
   );
 
+  const retryLastMessage = useCallback(async () => {
+    if (isStreaming) return;
+
+    // Find the last user message
+    const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
+    if (!lastUserMsg) return;
+
+    // Remove the last assistant message (which contains the error)
+    setMessages(prev => {
+      const newMessages = [...prev];
+      if (newMessages.length > 0 && newMessages[newMessages.length - 1].role === 'assistant') {
+        newMessages.pop();
+      }
+      return newMessages;
+    });
+
+    // Resend the question
+    await sendMessage(lastUserMsg.content);
+  }, [isStreaming, messages, sendMessage]);
+
   const clearHistory = useCallback(async () => {
     await clearSession(sessionId.current).catch(() => {});
     sessionId.current = crypto.randomUUID();
@@ -85,5 +105,5 @@ export function useChat() {
     setError(null);
   }, []);
 
-  return { messages, isStreaming, error, sendMessage, clearHistory };
+  return { messages, isStreaming, error, sendMessage, clearHistory, retryLastMessage };
 }

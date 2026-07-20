@@ -113,6 +113,14 @@ class SQLiteDatabase:
                 (str(status), chunk_count, error_message, document_id),
             )
 
+    def delete_document(self, document_id: str) -> bool:
+        """Delete a document record from the registry. Returns True if deleted."""
+        with self._connect() as conn:
+            cursor = conn.execute(
+                "DELETE FROM documents WHERE id = ?", (document_id,)
+            )
+            return cursor.rowcount > 0
+
     # ── Read operations ───────────────────────────────────────────────────────
 
     def get_document(self, document_id: str) -> DocumentRecord | None:

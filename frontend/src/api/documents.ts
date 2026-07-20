@@ -30,3 +30,14 @@ export async function uploadDocument(file: File): Promise<UploadResponse> {
 
   return response.json();
 }
+
+export async function deleteDocument(documentId: string): Promise<void> {
+  const response = await fetch(`${BASE}/${documentId}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ detail: 'Delete failed' }));
+    throw new Error(err.detail ?? `HTTP ${response.status}`);
+  }
+}

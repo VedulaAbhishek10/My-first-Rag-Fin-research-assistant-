@@ -3,6 +3,7 @@ import type { DocumentRecord, DocumentStatus } from '../../types';
 interface Props {
   documents: DocumentRecord[];
   isLoading: boolean;
+  onDelete: (documentId: string) => void;
 }
 
 const STATUS_CLASS: Record<DocumentStatus, string> = {
@@ -11,7 +12,7 @@ const STATUS_CLASS: Record<DocumentStatus, string> = {
   ERROR: 'status-error',
 };
 
-export function DocumentList({ documents, isLoading }: Props) {
+export function DocumentList({ documents, isLoading, onDelete }: Props) {
   if (isLoading) return <p className="doc-list-info">Loading…</p>;
   if (documents.length === 0) {
     return <p className="doc-list-info">No documents yet.</p>;
@@ -31,6 +32,13 @@ export function DocumentList({ documents, isLoading }: Props) {
             {doc.chunk_count > 0 && (
               <span className="doc-chunks">{doc.chunk_count} chunks</span>
             )}
+            <button
+              className="btn-icon"
+              onClick={() => onDelete(doc.id)}
+              title="Delete document"
+            >
+              🗑️
+            </button>
           </div>
         </li>
       ))}

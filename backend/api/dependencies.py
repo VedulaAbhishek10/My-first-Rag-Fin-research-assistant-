@@ -21,7 +21,7 @@ from backend.database.sqlite_db import SQLiteDatabase
 from backend.embeddings.embedding_model import EmbeddingModel, get_embedding_model
 from backend.ingestion.pipeline import IngestionPipeline
 from backend.llm.ollama_client import OllamaClient
-from backend.reranking.reranker import BaseReranker, NoOpReranker
+from backend.reranking.reranker import BaseReranker, CrossEncoderReranker
 from backend.retrieval.bm25_index import BM25Index
 from backend.retrieval.hybrid_retriever import HybridRetriever
 from backend.retrieval.retriever import Retriever
@@ -93,8 +93,8 @@ def get_ollama_client() -> OllamaClient:
 
 @lru_cache(maxsize=1)
 def get_reranker() -> BaseReranker:
-    """Return the reranker (NoOp in Phase 1; swap for cross-encoder in Phase 2)."""
-    return NoOpReranker()
+    """Return the reranker (CrossEncoder in Phase 2)."""
+    return CrossEncoderReranker()
 
 
 @lru_cache(maxsize=1)

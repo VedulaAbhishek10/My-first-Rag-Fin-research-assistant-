@@ -18,6 +18,8 @@ Why define the interface now?
 
 from abc import ABC, abstractmethod
 
+from sentence_transformers import CrossEncoder
+
 from backend.vectorstore.chroma_store import SearchResult
 
 
@@ -48,3 +50,26 @@ class NoOpReranker(BaseReranker):
 
     def rerank(self, query: str, results: list[SearchResult]) -> list[SearchResult]:
         return results
+
+
+class CrossEncoderReranker(BaseReranker):
+    """
+    Cross-encoder reranker — uses a cross-encoder model to re-score results.
+    
+    Used in Phase 2. Provides much higher accuracy than embedding similarity.
+    """
+
+    def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2") -> None:
+        self.model = CrossEncoder(model_name)
+
+    def rerank(self, query: str, results: list[SearchResult]) -> list[SearchResult]:
+        if not results:
+            return []
+        
+        pairs = [[query, r.chunk_text] for r in results]
+        scores = self.model.predict(pairs)
+        
+        scored_results = list(zip(results, scores))
+        scored_results.sort(key=lambda x: x[1], reverse=True)
+        
+        return [result for result, score in scored_results]

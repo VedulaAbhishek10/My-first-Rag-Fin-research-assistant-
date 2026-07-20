@@ -5,18 +5,20 @@ Endpoints:
     POST /api/documents/upload   — upload and ingest a document
     GET  /api/documents/         — list all documents
     GET  /api/documents/{id}     — get one document's status
+    DELETE /api/documents/{id}   — delete a document
 """
 
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 
-from backend.api.dependencies import get_database, get_ingestion_pipeline
+from backend.api.dependencies import get_database, get_ingestion_pipeline, get_vector_store
 from backend.config import get_settings
 from backend.database.sqlite_db import SQLiteDatabase
 from backend.ingestion.pipeline import IngestionPipeline
 from backend.logging_config import get_logger
 from backend.models.document import DocumentRecord, DocumentStatus, UploadResponse
+from backend.vectorstore.chroma_store import ChromaVectorStore
 
 logger = get_logger(__name__)
 
@@ -117,3 +119,29 @@ async def get_document(
             detail=f"Document '{document_id}' not found.",
         )
     return record
+
+
+@router.delete(
+    "/{document_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a document",
+)
+async def delete_document(
+    document_id: str,
+    database: SQLiteDatabase = Depends(get_database),
+    vector_store: ChromaVectorStore = Depends(get_vector_store),
+) -> None:
+    """Delete a document from the registry and vector store."""
+    deleted = database.delete_document(document_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Document '{document_id}' not found.",
+        )
+    
+    # Also remove from ChromaDB
+    try:
+        vector_store.delete_document(document_id)
+    except Exception as e:
+        logger.error("Failed to delete document %s from vector store: %s", document_id, e)
+        # We don't raise an error here because the document is already deleted from SQLite
