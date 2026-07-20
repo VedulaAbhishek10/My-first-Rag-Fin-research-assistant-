@@ -11,7 +11,7 @@ interface Props {
 }
 
 export function ChatPanel({ documents }: Props) {
-  const { messages, isStreaming, error, sendMessage, clearHistory } = useChat();
+  const { messages, isStreaming, error, sendMessage, clearHistory, retryLastMessage } = useChat();
   const [filters, setFilters] = useState<SearchFilters>({});
 
   return (
@@ -37,7 +37,7 @@ export function ChatPanel({ documents }: Props) {
 
       {error && <div className="error-banner">{error}</div>}
 
-      <MessageList messages={messages} />
+      <MessageList messages={messages} onRetry={retryLastMessage} />
       <ChatInput onSend={question => sendMessage(question, filters)} disabled={isStreaming} />
     </div>
   );
