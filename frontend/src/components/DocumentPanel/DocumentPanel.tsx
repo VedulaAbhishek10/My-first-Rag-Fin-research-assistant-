@@ -9,7 +9,15 @@ interface Props {
 }
 
 export function DocumentPanel({ docs }: Props) {
-  const { documents, isLoading, isUploading, uploadError, upload, fetchDocuments } = docs;
+  const {
+  documents,
+  isLoading,
+  isUploading,
+  uploadError,
+  upload,
+  fetchDocuments,
+  removeDocument,
+} = docs;
 
   return (
     <div className="document-panel">
@@ -28,7 +36,11 @@ export function DocumentPanel({ docs }: Props) {
 
       {uploadError && <p className="upload-error">{uploadError}</p>}
 
-      <DocumentList documents={documents} isLoading={isLoading} />
+      <DocumentList
+  documents={documents}
+  isLoading={isLoading}
+  onDelete={removeDocument}
+/>
     </div>
   );
 }
