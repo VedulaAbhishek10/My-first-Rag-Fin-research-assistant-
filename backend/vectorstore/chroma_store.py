@@ -36,6 +36,10 @@ logger = get_logger(__name__)
 # We stay well below the hard limit (5461) to be safe with large documents.
 _CHROMA_MAX_BATCH_SIZE = 500
 
+# When fetching all chunks for BM25 we paginate to avoid hitting SQLite's
+# "too many SQL variables" limit. 1000 rows per page is safe.
+_GET_ALL_CHUNKS_PAGE_SIZE = 1000
+
 
 @dataclass
 class SearchResult:
@@ -192,22 +196,34 @@ class ChromaVectorStore:
 
         Returns an empty list when the collection is empty.
         """
-        if self._collection.count() == 0:
+        total = self._collection.count()
+        if total == 0:
             return []
 
-        stored = self._collection.get(include=["documents", "metadatas"])
-        return [
-            SearchResult(
-                chunk_id=chunk_id,
-                document_id=meta.get("document_id", ""),
-                text=text,
-                score=0.0,
-                metadata=meta,
+        all_results: list[SearchResult] = []
+        offset = 0
+        while offset < total:
+            batch = self._collection.get(
+                include=["documents", "metadatas"],
+                limit=_GET_ALL_CHUNKS_PAGE_SIZE,
+                offset=offset,
             )
             for chunk_id, text, meta in zip(
-                stored["ids"], stored["documents"], stored["metadatas"]
-            )
-        ]
+                batch["ids"], batch["documents"], batch["metadatas"]
+            ):
+                all_results.append(
+                    SearchResult(
+                        chunk_id=chunk_id,
+                        document_id=meta.get("document_id", ""),
+                        text=text,
+                        score=0.0,
+                        metadata=meta,
+                    )
+                )
+            offset += _GET_ALL_CHUNKS_PAGE_SIZE
+
+        logger.info("Fetched %d chunks for BM25 index", len(all_results))
+        return all_results
 
     def delete_document(self, document_id: str) -> None:
         """Remove all chunks that belong to a given document."""
