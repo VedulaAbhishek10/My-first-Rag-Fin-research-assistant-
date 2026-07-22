@@ -365,22 +365,27 @@ class ChatService:
                 yield StreamChunk(token=token, citations=None, done=False)
         except httpx.HTTPStatusError as exc:
             error_msg = (
-                "The LLM service returned an HTTP error. "
+                f"The LLM service returned an HTTP {exc.response.status_code} error "
+                f"for model '{self._ollama.model}'. "
                 "Please ensure Ollama is running and the required model is pulled."
             )
             logger.warning("LLM stream_chat HTTP error: %s", exc)
-            full_answer = f"{error_msg} (HTTP {exc.response.status_code})"
+            full_answer = error_msg
             yield StreamChunk(token=error_msg, citations=None, done=False)
         except httpx.ConnectError as exc:
             error_msg = (
                 "Cannot connect to the LLM service. "
-                "Make sure Ollama is running and reachable at the configured address."
+                f"Make sure Ollama is running and reachable at the configured address "
+                f"(model: '{self._ollama.model}')."
             )
             logger.warning("LLM stream_chat connection error: %s", exc)
             full_answer = error_msg
             yield StreamChunk(token=error_msg, citations=None, done=False)
         except Exception as exc:  # pragma: no cover — catch all other LLM failures
-            error_msg = "An unexpected error occurred while generating the answer."
+            error_msg = (
+                f"An unexpected error occurred while generating the answer "
+                f"using model '{self._ollama.model}'."
+            )
             logger.warning("LLM stream_chat unexpected error: %s", exc)
             full_answer = error_msg
             yield StreamChunk(token=error_msg, citations=None, done=False)
