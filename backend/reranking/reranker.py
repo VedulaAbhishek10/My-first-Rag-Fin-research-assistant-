@@ -66,7 +66,7 @@ class CrossEncoderReranker(BaseReranker):
         if not results:
             return []
         
-        pairs = [[query, r.chunk_text] for r in results]
+        pairs = [[query, r.text] for r in results]
         scores = self.model.predict(pairs)
         
         scored_results = list(zip(results, scores))
