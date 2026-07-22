@@ -23,6 +23,7 @@ from backend.reranking.reranker import BaseReranker
 from backend.retrieval.hybrid_retriever import HybridRetriever
 from backend.retrieval.timeline import TimelineQueryAnalyzer
 from backend.services.memory import ConversationMemory
+from backend.services.query_entity_extractor import QueryEntityExtractor
 from backend.vectorstore.chroma_store import SearchResult
 
 logger = get_logger(__name__)
@@ -56,12 +57,14 @@ class ChatService:
         reranker: BaseReranker,
         memory: ConversationMemory,
         timeline_analyzer: TimelineQueryAnalyzer,
+        query_entity_extractor: QueryEntityExtractor,
     ) -> None:
         self._retriever = retriever
         self._ollama = ollama_client
         self._reranker = reranker
         self._memory = memory
         self._timeline_analyzer = timeline_analyzer
+        self._query_entity_extractor = query_entity_extractor
 
     def _compute_confidence(
         self,
@@ -141,6 +144,16 @@ class ChatService:
             needs_timeline=timeline.needs_timeline,
             period_count=timeline.period_count(),
         )
+
+        # Extract filters if not provided
+        if filters is None:
+            filters = self._query_entity_extractor.extract(question)
+            logger.structured(
+                logging.INFO,
+                "Query entity extraction",
+                question=question[:100],
+                extracted_filters=filters.to_dict() if filters else None,
+            )
 
         # Retrieve relevant chunks
         retrieval_start = time.perf_counter()
@@ -293,6 +306,16 @@ class ChatService:
 
         # Analyze timeline
         timeline = self._timeline_analyzer.analyze(question)
+
+        # Extract filters if not provided
+        if filters is None:
+            filters = self._query_entity_extractor.extract(question)
+            logger.structured(
+                logging.INFO,
+                "Stream query entity extraction",
+                question=question[:100],
+                extracted_filters=filters.to_dict() if filters else None,
+            )
 
         # Retrieve
         retrieval_start = time.perf_counter()

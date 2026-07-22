@@ -193,4 +193,5 @@ def get_chat_service() -> ChatService:
         reranker=get_reranker(),
         memory=get_memory(),
         timeline_analyzer=get_timeline_query_analyzer(),
+        query_entity_extractor=get_query_entity_extractor(),
     )

@@ -98,7 +98,9 @@ def evaluate_retrieval(
         elapsed_ms = (time.perf_counter() - start) * 1000
         total_latency += elapsed_ms
 
-        retrieved_ids = [r.chunk_id for r in results]
+        # Match on document_id instead of chunk_id, as chunk_ids are random UUIDs
+        # and cannot be known in advance for the benchmark dataset.
+        retrieved_ids = [r.document_id for r in results]
 
         # Recall@K
         if relevant_ids:

@@ -44,12 +44,13 @@ def test_evaluate_retrieval(tmp_path):
     mock_retriever = MagicMock()
     
     # Mock results: doc1 (relevant), doc3 (irrelevant), doc2 (relevant)
+    # We mock document_id instead of chunk_id because the evaluator matches on document_id
     mock_result_1 = MagicMock()
-    mock_result_1.chunk_id = "doc1"
+    mock_result_1.document_id = "doc1"
     mock_result_2 = MagicMock()
-    mock_result_2.chunk_id = "doc3"
+    mock_result_2.document_id = "doc3"
     mock_result_3 = MagicMock()
-    mock_result_3.chunk_id = "doc2"
+    mock_result_3.document_id = "doc2"
     
     mock_retriever.retrieve.return_value = [mock_result_1, mock_result_2, mock_result_3]
 
