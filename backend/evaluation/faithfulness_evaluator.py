@@ -107,16 +107,23 @@ async def evaluate_faithfulness(
                 "faithfulness_score": float(result.get("faithfulness_score", 0.0)),
                 "explanation": result.get("explanation", ""),
             }
+        else:
+            return {
+                "groundedness": 0.0,
+                "citation_coverage": 0.0,
+                "has_hallucinations": False,
+                "faithfulness_score": 0.0,
+                "explanation": "Could not parse JSON from LLM response",
+            }
     except Exception as e:
         print(f"Faithfulness evaluation failed: {e}")
-
-    return {
-        "groundedness": 0.0,
-        "citation_coverage": 0.0,
-        "has_hallucinations": False,
-        "faithfulness_score": 0.0,
-        "explanation": f"Evaluation error: {str(e)}",
-    }
+        return {
+            "groundedness": 0.0,
+            "citation_coverage": 0.0,
+            "has_hallucinations": False,
+            "faithfulness_score": 0.0,
+            "explanation": f"Evaluation error: {str(e)}",
+        }
 
 
 async def run_faithfulness_evaluation(
