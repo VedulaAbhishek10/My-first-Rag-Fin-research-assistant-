@@ -1,0 +1,31 @@
+{
+  "queries": [
+    {
+      "id": "q1",
+      "question": "What was Apple's revenue in Q1 2024?",
+      "relevant_doc_ids": ["chunk_apple_q1_1", "chunk_apple_q1_2"],
+      "filters": {
+        "company": "Apple Inc.",
+        "year": 2024,
+        "quarter": "Q1"
+      }
+    },
+    {
+      "id": "q2",
+      "question": "How did Microsoft's cloud business perform in 2023?",
+      "relevant_doc_ids": ["chunk_msft_cloud_1"],
+      "filters": {
+        "company": "Microsoft Corporation",
+        "year": 2023
+      }
+    },
+    {
+      "id": "q3",
+      "question": "What are the main risk factors for Tesla?",
+      "relevant_doc_ids": ["chunk_tsla_risk_1", "chunk_tsla_risk_2"],
+      "filters": {
+        "company": "Tesla, Inc."
+      }
+    }
+  ]
+}
