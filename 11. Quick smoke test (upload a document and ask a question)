@@ -1,0 +1,8 @@
+# Upload a sample PDF
+curl -X POST http://localhost:8000/api/documents/upload \
+  -F "file=@path/to/sample.pdf"
+
+# Ask a question
+curl -X POST http://localhost:8000/api/chat/query \
+  -H "Content-Type: application/json" \
+  -d '{"question":"What is the revenue?","top_k":3}'
