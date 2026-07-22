@@ -2,42 +2,111 @@
   "queries": [
     {
       "id": "q1",
-      "question": "What was Apple's revenue in Q1 2024?",
-      "expected_relevant_count": 2,
+      "question": "What was the Nestlé Group's consolidated net income for 2025?",
+      "expected_relevant_count": 10,
       "relevant_metadata": {
-        "company": "Apple Inc.",
-        "year": 2024,
-        "quarter": "Q1"
+        "source": "financial-statements-2025-en.pdf"
       },
-      "filters": {
-        "company": "Apple Inc.",
-        "year": 2024,
-        "quarter": "Q1"
-      }
+      "filters": {}
     },
     {
       "id": "q2",
-      "question": "How did Microsoft's cloud business perform in 2023?",
-      "expected_relevant_count": 1,
+      "question": "What does the Nestlé consolidated statement of changes in equity show?",
+      "expected_relevant_count": 10,
       "relevant_metadata": {
-        "company": "Microsoft Corporation",
-        "year": 2023
+        "source": "financial-statements-2025-en.pdf"
       },
-      "filters": {
-        "company": "Microsoft Corporation",
-        "year": 2023
-      }
+      "filters": {}
     },
     {
       "id": "q3",
-      "question": "What are the main risk factors for Tesla?",
-      "expected_relevant_count": 2,
+      "question": "What was the service revenue and net income in the sample company's income statement?",
+      "expected_relevant_count": 10,
       "relevant_metadata": {
-        "company": "Tesla, Inc."
+        "source": "Sample-Financial-Statements-1.pdf"
       },
-      "filters": {
-        "company": "Tesla, Inc."
-      }
+      "filters": {}
+    },
+    {
+      "id": "q4",
+      "question": "What is the balance of retained earnings for the sample company as of September 30, 2021?",
+      "expected_relevant_count": 10,
+      "relevant_metadata": {
+        "source": "Sample-Financial-Statements-1.pdf"
+      },
+      "filters": {}
+    },
+    {
+      "id": "q5",
+      "question": "What did the auditor's report say about Chhattisgarh State Power Holding Company Limited's standalone financial statements for the year ended 31st March 2016?",
+      "expected_relevant_count": 10,
+      "relevant_metadata": {
+        "source": "CSPHCL Financial statement FY 15-16 (Standalone).pdf"
+      },
+      "filters": {}
+    },
+    {
+      "id": "q6",
+      "question": "What accounting policies does Chhattisgarh State Power Holding Company Limited disclose for the preparation of its financial statements?",
+      "expected_relevant_count": 10,
+      "relevant_metadata": {
+        "source": "CSPHCL Financial statement FY 15-16 (Standalone).pdf"
+      },
+      "filters": {}
+    },
+    {
+      "id": "q7",
+      "question": "What did the independent auditor's report say about Info Edge (India) Limited's standalone Ind AS financial statements?",
+      "expected_relevant_count": 10,
+      "relevant_metadata": {
+        "source": "audited-financial-statements-mar-18.pdf"
+      },
+      "filters": {}
+    },
+    {
+      "id": "q8",
+      "question": "What does the statement of changes in equity show for Info Edge (India) Limited?",
+      "expected_relevant_count": 10,
+      "relevant_metadata": {
+        "source": "audited-financial-statements-mar-18.pdf"
+      },
+      "filters": {}
+    },
+    {
+      "id": "q9",
+      "question": "How does the Ontario Trillium Foundation example illustrate internally prepared financial statements?",
+      "expected_relevant_count": 10,
+      "relevant_metadata": {
+        "source": "financial_statements_examples.pdf"
+      },
+      "filters": {}
+    },
+    {
+      "id": "q10",
+      "question": "What is a statement of financial position according to the internally prepared financial statement examples?",
+      "expected_relevant_count": 10,
+      "relevant_metadata": {
+        "source": "financial_statements_examples.pdf"
+      },
+      "filters": {}
+    },
+    {
+      "id": "q11",
+      "question": "What employee expenses, capitation fees, and affiliation fees are listed in the FS 023 sample financial statement?",
+      "expected_relevant_count": 10,
+      "relevant_metadata": {
+        "source": "fs023-sample-financial-statements.pdf"
+      },
+      "filters": {}
+    },
+    {
+      "id": "q12",
+      "question": "What does the statement of comprehensive income show in the FS 023 sample financial statements fact sheet?",
+      "expected_relevant_count": 10,
+      "relevant_metadata": {
+        "source": "fs023-sample-financial-statements.pdf"
+      },
+      "filters": {}
     }
   ]
 }
