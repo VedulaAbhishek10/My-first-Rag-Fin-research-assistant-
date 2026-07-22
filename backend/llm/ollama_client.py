@@ -41,6 +41,11 @@ class OllamaClient:
         self._model = model
         self._timeout = timeout
 
+    @property
+    def model(self) -> str:
+        """The name of the Ollama model this client is configured to use."""
+        return self._model
+
     def is_available(self) -> bool:
         """
         Check synchronously whether Ollama is running.
