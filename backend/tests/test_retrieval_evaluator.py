@@ -32,7 +32,10 @@ def test_evaluate_retrieval(tmp_path):
             {
                 "id": "q1",
                 "question": "What is Apple's revenue?",
-                "relevant_doc_ids": ["doc1", "doc2"],
+                "expected_relevant_count": 2,
+                "relevant_metadata": {
+                    "company": "Apple Inc."
+                },
                 "filters": None
             }
         ]
@@ -44,13 +47,13 @@ def test_evaluate_retrieval(tmp_path):
     mock_retriever = MagicMock()
     
     # Mock results: doc1 (relevant), doc3 (irrelevant), doc2 (relevant)
-    # We mock document_id instead of chunk_id because the evaluator matches on document_id
+    # We mock metadata instead of document_id because the evaluator matches on metadata
     mock_result_1 = MagicMock()
-    mock_result_1.document_id = "doc1"
+    mock_result_1.metadata = {"company": "Apple Inc."}
     mock_result_2 = MagicMock()
-    mock_result_2.document_id = "doc3"
+    mock_result_2.metadata = {"company": "Microsoft"}
     mock_result_3 = MagicMock()
-    mock_result_3.document_id = "doc2"
+    mock_result_3.metadata = {"company": "Apple Inc."}
     
     mock_retriever.retrieve.return_value = [mock_result_1, mock_result_2, mock_result_3]
 
@@ -61,13 +64,13 @@ def test_evaluate_retrieval(tmp_path):
     assert isinstance(metrics, RetrievalMetrics)
     assert metrics.num_queries == 1
     
-    # Recall@5: retrieved doc1, doc3, doc2. Relevant: doc1, doc2. Hits: 2. Recall = 2/2 = 1.0
+    # Recall@5: retrieved 2 relevant. Expected 2. Recall = 2/2 = 1.0
     assert metrics.recall_at_5 == 1.0
     
     # Precision@5: retrieved 3, relevant 2. Precision = 2/3 = 0.6667
     assert metrics.precision_at_5 == 0.6667
     
-    # MRR: first relevant is doc1 at rank 1. MRR = 1.0
+    # MRR: first relevant is at rank 1. MRR = 1.0
     assert metrics.mrr == 1.0
     
     # Hit Rate: 1.0

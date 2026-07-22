@@ -20,6 +20,7 @@ from typing import Any
 
 from backend.models.query import SearchFilters
 from backend.retrieval.hybrid_retriever import HybridRetriever
+from backend.vectorstore.chroma_store import SearchResult
 
 
 @dataclass
@@ -52,6 +53,16 @@ def ndcg_at_k(relevance_scores: list[float], k: int) -> float:
     if idcg == 0:
         return 0.0
     return dcg / idcg
+
+
+def _is_relevant(result: SearchResult, relevant_metadata: dict) -> bool:
+    """Check if a retrieved result matches the relevant metadata."""
+    if not relevant_metadata:
+        return False
+    for key, value in relevant_metadata.items():
+        if result.metadata.get(key) != value:
+            return False
+    return True
 
 
 def evaluate_retrieval(
@@ -89,7 +100,8 @@ def evaluate_retrieval(
     for query in queries:
         qid = query["id"]
         question = query["question"]
-        relevant_ids = set(query.get("relevant_doc_ids", []))
+        expected_relevant_count = query.get("expected_relevant_count", 1)
+        relevant_metadata = query.get("relevant_metadata", {})
         filters_dict = query.get("filters", {})
         filters = SearchFilters(**filters_dict) if filters_dict else None
 
@@ -98,16 +110,13 @@ def evaluate_retrieval(
         elapsed_ms = (time.perf_counter() - start) * 1000
         total_latency += elapsed_ms
 
-        # Match on document_id instead of chunk_id, as chunk_ids are random UUIDs
-        # and cannot be known in advance for the benchmark dataset.
-        retrieved_ids = [r.document_id for r in results]
-
         # Recall@K
-        if relevant_ids:
-            retrieved_set_5 = set(retrieved_ids[:5])
-            retrieved_set_10 = set(retrieved_ids[:10])
-            recall_5 = len(relevant_ids & retrieved_set_5) / len(relevant_ids)
-            recall_10 = len(relevant_ids & retrieved_set_10) / len(relevant_ids)
+        retrieved_relevant_5 = [r for r in results[:5] if _is_relevant(r, relevant_metadata)]
+        retrieved_relevant_10 = [r for r in results[:10] if _is_relevant(r, relevant_metadata)]
+        
+        if expected_relevant_count > 0:
+            recall_5 = len(retrieved_relevant_5) / expected_relevant_count
+            recall_10 = len(retrieved_relevant_10) / expected_relevant_count
         else:
             recall_5 = 0.0
             recall_10 = 0.0
@@ -116,27 +125,27 @@ def evaluate_retrieval(
         recall_10_sum += recall_10
 
         # Precision@5
-        if relevant_ids and retrieved_ids[:5]:
-            precision_5 = len(relevant_ids & set(retrieved_ids[:5])) / min(5, len(retrieved_ids[:5]))
+        if results[:5]:
+            precision_5 = len(retrieved_relevant_5) / min(5, len(results[:5]))
         else:
             precision_5 = 0.0
         precision_5_sum += precision_5
 
         # MRR
         reciprocal_rank = 0.0
-        for rank, rid in enumerate(retrieved_ids, start=1):
-            if rid in relevant_ids:
+        for rank, r in enumerate(results, start=1):
+            if _is_relevant(r, relevant_metadata):
                 reciprocal_rank = 1.0 / rank
                 break
         mrr_sum += reciprocal_rank
 
         # NDCG@10
-        relevance_scores = [1.0 if rid in relevant_ids else 0.0 for rid in retrieved_ids[:10]]
+        relevance_scores = [1.0 if _is_relevant(r, relevant_metadata) else 0.0 for r in results[:10]]
         ndcg_10 = ndcg_at_k(relevance_scores, 10)
         ndcg_10_sum += ndcg_10
 
         # Hit Rate
-        if any(rid in relevant_ids for rid in retrieved_ids):
+        if any(_is_relevant(r, relevant_metadata) for r in results):
             hit_count += 1
 
         per_query_results.append({
@@ -147,9 +156,9 @@ def evaluate_retrieval(
             "precision@5": round(precision_5, 4),
             "mrr": round(reciprocal_rank, 4),
             "ndcg@10": round(ndcg_10, 4),
-            "hit": any(rid in relevant_ids for rid in retrieved_ids),
+            "hit": any(_is_relevant(r, relevant_metadata) for r in results),
             "latency_ms": round(elapsed_ms, 2),
-            "retrieved_ids": retrieved_ids[:10],
+            "retrieved_count": len(results),
         })
 
     n = len(queries)
