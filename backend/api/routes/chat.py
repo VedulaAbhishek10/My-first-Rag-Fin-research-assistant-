@@ -123,7 +123,7 @@ async def clear_session(
 
 def _check_ollama(chat_service: ChatService) -> None:
     """Raise 503 with a clear message if Ollama is not reachable."""
-    if not chat_service._llm.is_available():
+    if not chat_service._ollama.is_available():
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=(

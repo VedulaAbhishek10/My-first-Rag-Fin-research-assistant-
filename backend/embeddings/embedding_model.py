@@ -41,7 +41,7 @@ class EmbeddingModel:
     @property
     def dimension(self) -> int:
         """Number of floats in each output vector (384 for bge-small-en-v1.5)."""
-        return self._model.get_sentence_embedding_dimension()
+        return self._model.get_embedding_dimension()
 
     def embed(self, texts: list[str], batch_size: int = 32) -> list[list[float]]:
         """
