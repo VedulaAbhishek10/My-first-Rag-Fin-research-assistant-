@@ -17,12 +17,13 @@ Streaming:
   instead of waiting for the full response. We use httpx's async streaming
   to yield tokens as they arrive.
 
-Model configuration:
-  The model name comes from Settings.ollama_model — it is never hardcoded
-  here. To switch models, change OLLAMA_MODEL in your .env file.
+Observability:
+  Every request is logged with message count, response length, and latency
+  so performance regressions and failed calls are visible in production.
 """
 
 import json
+import time
 from collections.abc import AsyncGenerator
 
 import httpx
@@ -65,13 +66,29 @@ class OllamaClient:
         Returns:
             The model's full reply as a string.
         """
+        start = time.perf_counter()
+        logger.info(
+            "LLM request (non-streaming) | model=%s | messages=%d",
+            self._model,
+            len(messages),
+        )
+
         async with httpx.AsyncClient(timeout=self._timeout) as client:
             response = await client.post(
                 f"{self._base_url}/api/chat",
                 json={"model": self._model, "messages": messages, "stream": False},
             )
             response.raise_for_status()
-            return response.json()["message"]["content"]
+            answer = response.json()["message"]["content"]
+
+        elapsed = (time.perf_counter() - start) * 1000
+        logger.info(
+            "LLM response | model=%s | length=%d | latency=%.0fms",
+            self._model,
+            len(answer),
+            elapsed,
+        )
+        return answer
 
     async def stream_chat(
         self, messages: list[dict]
@@ -89,6 +106,14 @@ class OllamaClient:
         Yields:
             Individual text tokens as the model generates them.
         """
+        start = time.perf_counter()
+        token_count = 0
+        logger.info(
+            "LLM stream request | model=%s | messages=%d",
+            self._model,
+            len(messages),
+        )
+
         timeout = httpx.Timeout(
             connect=10.0,
             read=float(self._timeout),
@@ -114,4 +139,15 @@ class OllamaClient:
                         break
                     token = data.get("message", {}).get("content", "")
                     if token:
+                        token_count += 1
                         yield token
+
+        elapsed = (time.perf_counter() - start) * 1000
+        tps = round(token_count / (elapsed / 1000), 1) if elapsed > 0 else 0
+        logger.info(
+            "LLM stream done | model=%s | tokens=%d | latency=%.0fms | tps=%.1f",
+            self._model,
+            token_count,
+            elapsed,
+            tps,
+        )

@@ -11,9 +11,19 @@ Why lru_cache on the factory functions?
   Database connections, the embedding model, and ChromaDB are expensive to
   initialise. lru_cache ensures each is created once per process and reused
   on every subsequent request, rather than re-created per request.
+
+Request ID middleware:
+  Every incoming request gets a unique UUID that flows through all log
+  messages, making it possible to trace a single user request end-to-end
+  across retrieval, reranking, and generation steps.
 """
 
+import uuid
 from functools import lru_cache
+
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
 
 from backend.chunking.chunker import TextChunker
 from backend.config import get_settings
@@ -21,6 +31,11 @@ from backend.database.sqlite_db import SQLiteDatabase
 from backend.embeddings.embedding_model import EmbeddingModel, get_embedding_model
 from backend.ingestion.pipeline import IngestionPipeline
 from backend.llm.ollama_client import OllamaClient
+from backend.logging_config import (
+    clear_request_context,
+    get_logger,
+    set_request_context,
+)
 from backend.reranking.reranker import BaseReranker, CrossEncoderReranker
 from backend.retrieval.bm25_index import BM25Index
 from backend.retrieval.hybrid_retriever import HybridRetriever
@@ -30,6 +45,29 @@ from backend.services.chat_service import ChatService
 from backend.services.memory import ConversationMemory
 from backend.services.query_entity_extractor import QueryEntityExtractor
 from backend.vectorstore.chroma_store import ChromaVectorStore
+
+logger = get_logger(__name__)
+
+
+class RequestContextMiddleware(BaseHTTPMiddleware):
+    """
+    Middleware that adds a unique request ID to every incoming request.
+
+    The request ID is stored in a context variable so all downstream log
+    messages automatically include it. It is also returned in the
+    X-Request-ID response header so clients can correlate logs.
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        request_id = str(uuid.uuid4())
+        set_request_context(request_id)
+
+        response: Response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+
+        clear_request_context()
+        return response
+
 
 # ── Ingestion dependencies ─────────────────────────────────────────────────────
 

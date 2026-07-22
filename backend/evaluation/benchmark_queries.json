@@ -1,0 +1,225 @@
+{
+  "queries": [
+    {
+      "id": "q1",
+      "question": "What was Apple's revenue in Q3 2023?",
+      "relevant_doc_ids": ["apple_q3_2023"],
+      "relevant_chunk_ids": [],
+      "expected_answer_contains": ["revenue", "Apple", "Q3", "2023"],
+      "filters": {
+        "company": "Apple Inc.",
+        "year": 2023,
+        "quarter": "Q3"
+      }
+    },
+    {
+      "id": "q2",
+      "question": "How much did NVIDIA earn in fiscal year 2024?",
+      "relevant_doc_ids": ["nvidia_annual_2024"],
+      "relevant_chunk_ids": [],
+      "expected_answer_contains": ["NVIDIA", "fiscal", "2024", "revenue", "earnings"],
+      "filters": {
+        "company": "NVIDIA Corporation",
+        "year": 2024
+      }
+    },
+    {
+      "id": "q3",
+      "question": "What were the key highlights from Tesla's Q4 2023 earnings call?",
+      "relevant_doc_ids": ["tesla_q4_2023_call"],
+      "relevant_chunk_ids": [],
+      "expected_answer_contains": ["Tesla", "Q4", "2023", "earnings", "highlights"],
+      "filters": {
+        "company": "Tesla Inc.",
+        "year": 2023,
+        "quarter": "Q4",
+        "doc_type": "earnings_call"
+      }
+    },
+    {
+      "id": "q4",
+      "question": "What is Microsoft's cloud revenue growth rate?",
+      "relevant_doc_ids": ["microsoft_annual_2024"],
+      "relevant_chunk_ids": [],
+      "expected_answer_contains": ["Microsoft", "cloud", "revenue", "growth"],
+      "filters": {
+        "company": "Microsoft Corporation",
+        "year": 2024
+      }
+    },
+    {
+      "id": "q5",
+      "question": "Compare Apple and Microsoft profit margins for 2023",
+      "relevant_doc_ids": ["apple_annual_2023", "microsoft_annual_2023"],
+      "relevant_chunk_ids": [],
+      "expected_answer_contains": ["Apple", "Microsoft", "profit", "margin", "2023"],
+      "filters": {}
+    },
+    {
+      "id": "q6",
+      "question": "What risks did Amazon disclose in their 2023 annual report?",
+      "relevant_doc_ids": ["amazon_annual_2023"],
+      "relevant_chunk_ids": [],
+      "expected_answer_contains": ["Amazon", "risk", "2023", "annual report"],
+      "filters": {
+        "company": "Amazon.com Inc.",
+        "year": 2023,
+        "doc_type": "annual_report"
+      }
+    },
+    {
+      "id": "q7",
+      "question": "How many vehicles did Tesla deliver in 2023?",
+      "relevant_doc_ids": ["tesla_annual_2023"],
+      "relevant_chunk_ids": [],
+      "expected_answer_contains": ["Tesla", "deliveries", "2023", "vehicles"],
+      "filters": {
+        "company": "Tesla Inc.",
+        "year": 2023
+      }
+    },
+    {
+      "id": "q8",
+      "question": "What is the total addressable market for AI chips according to NVIDIA?",
+      "relevant_doc_ids": ["nvidia_q2_2024_call"],
+      "relevant_chunk_ids": [],
+      "expected_answer_contains": ["NVIDIA", "AI", "chips", "TAM", "market"],
+      "filters": {
+        "company": "NVIDIA Corporation",
+        "year": 2024,
+        "quarter": "Q2"
+      }
+    },
+    {
+      "id": "q9",
+      "question": "What was Google's advertising revenue in 2023?",
+      "relevant_doc_ids": ["google_annual_2023"],
+      "relevant_chunk_ids": [],
+      "expected_answer_contains": ["Google", "advertising", "revenue", "2023"],
+      "filters": {
+        "company": "Alphabet Inc.",
+        "year": 2023
+      }
+    },
+    {
+      "id": "q10",
+      "question": "Summarize Meta's AI investments in 2024",
+      "relevant_doc_ids": ["meta_q1_2024_call"],
+      "relevant_chunk_ids": [],
+      "expected_answer_contains": ["Meta", "AI", "investment", "2024"],
+      "filters": {
+        "company": "Meta Platforms Inc.",
+        "year": 2024
+      }
+    },
+    {
+      "id": "q11",
+      "question": "What is the revenue breakdown by segment for Apple in 2023?",
+      "relevant_doc_ids": ["apple_annual_2023"],
+      "relevant_chunk_ids": [],
+      "expected_answer_contains": ["Apple", "revenue", "segment", "2023", "iPhone", "Services"],
+      "filters": {
+        "company": "Apple Inc.",
+        "year": 2023
+      }
+    },
+    {
+      "id": "q12",
+      "question": "How does NVIDIA's data center revenue compare to gaming revenue?",
+      "relevant_doc_ids": ["nvidia_annual_2024"],
+      "relevant_chunk_ids": [],
+      "expected_answer_contains": ["NVIDIA", "data center", "gaming", "revenue", "compare"],
+      "filters": {
+        "company": "NVIDIA Corporation",
+        "year": 2024
+      }
+    },
+    {
+      "id": "q13",
+      "question": "What guidance did Microsoft provide for next quarter?",
+      "relevant_doc_ids": ["microsoft_q4_2023_call"],
+      "relevant_chunk_ids": [],
+      "expected_answer_contains": ["Microsoft", "guidance", "next quarter", "outlook"],
+      "filters": {
+        "company": "Microsoft Corporation",
+        "year": 2023,
+        "quarter": "Q4"
+      }
+    },
+    {
+      "id": "q14",
+      "question": "What are the key financial metrics for Amazon AWS?",
+      "relevant_doc_ids": ["amazon_annual_2023"],
+      "relevant_chunk_ids": [],
+      "expected_answer_contains": ["Amazon", "AWS", "revenue", "operating income"],
+      "filters": {
+        "company": "Amazon.com Inc.",
+        "year": 2023
+      }
+    },
+    {
+      "id": "q15",
+      "question": "How much did Tesla spend on R&D in 2023?",
+      "relevant_doc_ids": ["tesla_annual_2023"],
+      "relevant_chunk_ids": [],
+      "expected_answer_contains": ["Tesla", "R&D", "research", "development", "2023"],
+      "filters": {
+        "company": "Tesla Inc.",
+        "year": 2023
+      }
+    },
+    {
+      "id": "q16",
+      "question": "What is the free cash flow for Google in 2023?",
+      "relevant_doc_ids": ["google_annual_2023"],
+      "relevant_chunk_ids": [],
+      "expected_answer_contains": ["Google", "free cash flow", "2023"],
+      "filters": {
+        "company": "Alphabet Inc.",
+        "year": 2023
+      }
+    },
+    {
+      "id": "q17",
+      "question": "What are Meta's user growth numbers for 2024?",
+      "relevant_doc_ids": ["meta_q1_2024_call"],
+      "relevant_chunk_ids": [],
+      "expected_answer_contains": ["Meta", "user", "growth", "DAU", "MAU", "2024"],
+      "filters": {
+        "company": "Meta Platforms Inc.",
+        "year": 2024
+      }
+    },
+    {
+      "id": "q18",
+      "question": "Compare the gross margins of Apple and Microsoft",
+      "relevant_doc_ids": ["apple_annual_2023", "microsoft_annual_2023"],
+      "relevant_chunk_ids": [],
+      "expected_answer_contains": ["gross margin", "Apple", "Microsoft", "compare"],
+      "filters": {}
+    },
+    {
+      "id": "q19",
+      "question": "What is NVIDIA's outlook for the automotive segment?",
+      "relevant_doc_ids": ["nvidia_q2_2024_call"],
+      "relevant_chunk_ids": [],
+      "expected_answer_contains": ["NVIDIA", "automotive", "outlook", "segment"],
+      "filters": {
+        "company": "NVIDIA Corporation",
+        "year": 2024,
+        "quarter": "Q2"
+      }
+    },
+    {
+      "id": "q20",
+      "question": "What were the one-time charges affecting Amazon's earnings?",
+      "relevant_doc_ids": ["amazon_annual_2023"],
+      "relevant_chunk_ids": [],
+      "expected_answer_contains": ["Amazon", "one-time", "charges", "earnings", "restructuring"],
+      "filters": {
+        "company": "Amazon.com Inc.",
+        "year": 2023
+      }
+    }
+  ]
+}

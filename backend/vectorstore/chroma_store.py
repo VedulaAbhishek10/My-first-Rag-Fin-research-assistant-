@@ -17,8 +17,12 @@ Cosine similarity:
   vectors, cosine_similarity = dot product. ChromaDB returns *distance*
   (0 = identical, higher = more different), so we convert:
       similarity = 1 - distance   (clamped to [0, 1])
+
+Observability:
+  Ingestion and search operations are logged with latency and result counts.
 """
 
+import time
 from dataclasses import dataclass
 
 import chromadb
@@ -71,6 +75,7 @@ class ChromaVectorStore:
             return
 
         total = len(chunks)
+        t0 = time.perf_counter()
         for batch_start in range(0, total, _CHROMA_MAX_BATCH_SIZE):
             batch = chunks[batch_start : batch_start + _CHROMA_MAX_BATCH_SIZE]
             self._collection.add(
@@ -95,7 +100,14 @@ class ChromaVectorStore:
             logger.info(
                 "ChromaDB: stored %d/%d chunks", batch_start + len(batch), total
             )
-        logger.info("Added %d chunks to ChromaDB in total", total)
+        elapsed = (time.perf_counter() - t0) * 1000
+        cps = round(total / (elapsed / 1000), 1) if elapsed > 0 else 0
+        logger.info(
+            "Added %d chunks to ChromaDB in %.0fms (%.1f chunks/s)",
+            total,
+            elapsed,
+            cps,
+        )
 
     def search(
         self,
@@ -121,6 +133,7 @@ class ChromaVectorStore:
             logger.warning("ChromaDB collection is empty — no results to return")
             return []
 
+        t0 = time.perf_counter()
         # Cap n_results at the collection size so ChromaDB doesn't complain.
         # A metadata filter may leave fewer matches than actual_k; ChromaDB
         # simply returns however many satisfy the filter.
@@ -152,6 +165,19 @@ class ChromaVectorStore:
                     metadata=meta,
                 )
             )
+
+        elapsed = (time.perf_counter() - t0) * 1000
+        top_score = search_results[0].score if search_results else 0
+        logger.info(
+            "ChromaDB search | dim=%d | top_k=%d | found=%d | top_score=%.4f | "
+            "latency=%.1fms | filtered=%s",
+            len(query_embedding),
+            top_k,
+            len(search_results),
+            top_score,
+            elapsed,
+            where is not None,
+        )
 
         return search_results
 

@@ -20,9 +20,12 @@ Displayed scores:
   found only by BM25 has no cosine score, so it shows 0.0 — the fused *ranking*
   still decides its position; the score is only for display.
 
-This class exposes the same `retrieve(query, top_k, filters)` signature as the
-plain Retriever, so ChatService can use either without changes.
+Observability:
+  Each retrieval stage logs latency and result count so performance
+  bottlenecks are visible in production logs.
 """
+
+import time
 
 from backend.logging_config import get_logger
 from backend.models.query import SearchFilters
@@ -86,13 +89,28 @@ class HybridRetriever:
                 return dense_only[:top_k]
             return order_timeline_results(dense_only, top_k=top_k, timeline=timeline)
 
-        # Pull a wider candidate pool from each retriever so fusion has enough
-        # to work with, then narrow to top_k after merging.
+        # ── Dense retrieval ──
+        t0 = time.perf_counter()
         dense_results = self._dense.retrieve(
             query, top_k=candidate_pool, filters=filters
         )
+        dense_ms = (time.perf_counter() - t0) * 1000
+        logger.info(
+            "Dense retrieval | results=%d | latency=%.1fms",
+            len(dense_results),
+            dense_ms,
+        )
+
+        # ── BM25 retrieval ──
+        t1 = time.perf_counter()
         bm25_results = self._bm25.search(
             query, top_k=candidate_pool, filters=filters
+        )
+        bm25_ms = (time.perf_counter() - t1) * 1000
+        logger.info(
+            "BM25 retrieval | results=%d | latency=%.1fms",
+            len(bm25_results),
+            bm25_ms,
         )
 
         if not bm25_results:
@@ -109,16 +127,23 @@ class HybridRetriever:
         for result in bm25_results:
             by_id.setdefault(result.chunk_id, result)
 
+        # ── Fusion ──
+        t2 = time.perf_counter()
         dense_ids = [r.chunk_id for r in dense_results]
         bm25_ids = [r.chunk_id for r in bm25_results]
         fused_ids = reciprocal_rank_fusion([dense_ids, bm25_ids], k=self._rrf_k)
+        fusion_ms = (time.perf_counter() - t2) * 1000
 
         logger.info(
-            "Hybrid retrieve: %d dense + %d bm25 → %d fused (returning %d)",
+            "Hybrid retrieve: %d dense + %d bm25 → %d fused (returning %d) | "
+            "dense=%.1fms bm25=%.1fms fusion=%.1fms",
             len(dense_ids),
             len(bm25_ids),
             len(fused_ids),
             min(top_k, len(fused_ids)),
+            dense_ms,
+            bm25_ms,
+            fusion_ms,
         )
         fused_results = [by_id[chunk_id] for chunk_id in fused_ids]
         if timeline is None:
