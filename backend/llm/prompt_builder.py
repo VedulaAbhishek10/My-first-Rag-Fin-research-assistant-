@@ -20,6 +20,13 @@ Message format (Ollama / OpenAI style):
         {"role": "assistant", "content": "...previous answer..."},     # history
         {"role": "user",      "content": "...context + question..."},  # current
     ]
+
+Grounding & Faithfulness:
+  The system prompt now includes explicit instructions to:
+  - Cite sources inline using [Source: filename, Page: N] notation
+  - Refuse to answer when context is insufficient
+  - Flag low-confidence answers with a [LOW CONFIDENCE] prefix
+  - Never invent numbers, dates, or company names
 """
 
 from backend.vectorstore.chroma_store import SearchResult
@@ -34,7 +41,12 @@ IMPORTANT RULES:
 3. Always be precise with numbers, dates, and company names \
 as they appear in the documents.
 4. Do not invent, guess, or extrapolate figures that are not explicitly stated.
-5. Keep your answer concise and well-structured."""
+5. Keep your answer concise and well-structured.
+6. When citing specific facts, include the source in brackets: [Source: filename, Page: N].
+7. If you are unsure about any claim, prefix your answer with [LOW CONFIDENCE] and explain why.
+8. Never make up financial figures, dates, or company names — if they are not in the context, say so.
+9. If the question asks for a comparison but only one company's data is available, state that clearly.
+10. If the question asks about a time period not covered by the documents, state the available time range."""
 
 
 def _format_context(results: list[SearchResult]) -> str:

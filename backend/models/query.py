@@ -10,6 +10,11 @@ The RAG query flow in plain English:
 
 Every answer must include citations. This is what separates a RAG system from
 a plain LLM — the user can always trace the answer back to the source document.
+
+Confidence scoring:
+  Each QueryResponse now includes a confidence score (0.0–1.0) that reflects
+  the quality of the retrieved evidence. Low confidence indicates that the
+  answer may be unreliable and should be verified.
 """
 
 import uuid
@@ -172,12 +177,19 @@ class QueryResponse(BaseModel):
 
     answer: the LLM's response, grounded in the retrieved chunks.
     citations: the source chunks — shown in the UI so users can verify.
+    confidence: 0.0–1.0 score reflecting retrieval quality and answer reliability.
     processing_time_ms: useful for spotting performance regressions.
     """
 
     answer: str
     citations: list[Citation]
     session_id: str
+    confidence: float = Field(
+        default=1.0,
+        ge=0.0,
+        le=1.0,
+        description="Confidence score based on retrieval quality (0=no evidence, 1=high confidence)",
+    )
     processing_time_ms: float
 
 
