@@ -13,6 +13,7 @@ import logging
 from typing import AsyncGenerator
 
 import anyio
+import httpx
 
 from backend.llm.ollama_client import OllamaClient
 from backend.llm.prompt_builder import build_messages, _format_context
@@ -358,9 +359,31 @@ class ChatService:
         # Stream tokens
         full_answer = ""
         generation_start = time.perf_counter()
-        async for token in self._ollama.stream_chat(messages):
-            full_answer += token
-            yield StreamChunk(token=token, citations=None, done=False)
+        try:
+            async for token in self._ollama.stream_chat(messages):
+                full_answer += token
+                yield StreamChunk(token=token, citations=None, done=False)
+        except httpx.HTTPStatusError as exc:
+            error_msg = (
+                "The LLM service returned an HTTP error. "
+                "Please ensure Ollama is running and the required model is pulled."
+            )
+            logger.warning("LLM stream_chat HTTP error: %s", exc)
+            full_answer = f"{error_msg} (HTTP {exc.response.status_code})"
+            yield StreamChunk(token=error_msg, citations=None, done=False)
+        except httpx.ConnectError as exc:
+            error_msg = (
+                "Cannot connect to the LLM service. "
+                "Make sure Ollama is running and reachable at the configured address."
+            )
+            logger.warning("LLM stream_chat connection error: %s", exc)
+            full_answer = error_msg
+            yield StreamChunk(token=error_msg, citations=None, done=False)
+        except Exception as exc:  # pragma: no cover — catch all other LLM failures
+            error_msg = "An unexpected error occurred while generating the answer."
+            logger.warning("LLM stream_chat unexpected error: %s", exc)
+            full_answer = error_msg
+            yield StreamChunk(token=error_msg, citations=None, done=False)
 
         generation_ms = (time.perf_counter() - generation_start) * 1000
         logger.structured(
