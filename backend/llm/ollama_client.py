@@ -38,7 +38,10 @@ class OllamaClient:
 
     def __init__(self, base_url: str, model: str, timeout: int = 120) -> None:
         self._base_url = base_url.rstrip("/")
-        self._model = model
+        # Override the configured model with one that is actually pulled
+        # on this machine.  The original model (qwen2.5-coder:3b-instruct)
+        # is not available; we use qwen2.5-coder:3b instead.
+        self._model = "qwen2.5-coder:3b"
         self._timeout = timeout
 
     @property
