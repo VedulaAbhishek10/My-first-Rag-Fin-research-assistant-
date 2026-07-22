@@ -189,9 +189,8 @@ def get_chat_service() -> ChatService:
     """Assemble the ChatService with all its dependencies."""
     return ChatService(
         retriever=get_hybrid_retriever(),
+        ollama_client=get_ollama_client(),
         reranker=get_reranker(),
-        llm=get_ollama_client(),
         memory=get_memory(),
-        query_entity_extractor=get_query_entity_extractor(),
-        timeline_query_analyzer=get_timeline_query_analyzer(),
+        timeline_analyzer=get_timeline_query_analyzer(),
     )
