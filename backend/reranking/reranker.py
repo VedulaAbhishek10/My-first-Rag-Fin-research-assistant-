@@ -18,6 +18,7 @@ Why define the interface now?
 
 from abc import ABC, abstractmethod
 
+import torch
 from sentence_transformers import CrossEncoder
 
 from backend.vectorstore.chroma_store import SearchResult
@@ -60,7 +61,20 @@ class CrossEncoderReranker(BaseReranker):
     """
 
     def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2") -> None:
-        self.model = CrossEncoder(model_name)
+        # Determine the best device: prefer CUDA if the GPU is compatible,
+        # otherwise force CPU.  The current PyTorch build requires compute
+        # capability >= 7.5 (major >= 7 and minor >= 5).
+        device = "cpu"
+        if torch.cuda.is_available():
+            try:
+                major, minor = torch.cuda.get_device_capability(0)
+                if major > 7 or (major == 7 and minor >= 5):
+                    device = "cuda"
+            except Exception:
+                # If we can't query the capability, stay on the safe side.
+                pass
+
+        self.model = CrossEncoder(model_name, device=device)
 
     def rerank(self, query: str, results: list[SearchResult]) -> list[SearchResult]:
         if not results:
