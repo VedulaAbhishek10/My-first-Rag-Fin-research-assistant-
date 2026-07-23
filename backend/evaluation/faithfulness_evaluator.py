@@ -16,8 +16,8 @@ from typing import Any
 
 from backend.llm.ollama_client import OllamaClient
 
-
-FAITHFULNESS_PROMPT = """You are an expert evaluator for RAG systems. Your task is to evaluate whether an answer is faithful to the provided context.
+FAITHFULNESS_PROMPT = """You are an expert evaluator for RAG systems. Your task is to \
+evaluate whether an answer is faithful to the provided context.
 
 Context (retrieved documents):
 {context}
@@ -28,21 +28,25 @@ Answer: {answer}
 
 Evaluate the answer on the following criteria:
 
-1. **Groundedness** (0-1): Are all factual claims in the answer supported by the context?
+1. **Groundedness** (0-1): Are all factual claims in the answer supported by the \
+context?
    - 1.0 = All claims are directly supported
    - 0.5 = Some claims are supported, some are not
    - 0.0 = No claims are supported
 
-2. **Citation Coverage** (0-1): What fraction of the answer's factual claims can be traced to specific citations?
+2. **Citation Coverage** (0-1): What fraction of the answer's factual claims can be \
+traced to specific citations?
    - 1.0 = Every claim has a citation
    - 0.5 = About half the claims have citations
    - 0.0 = No claims have citations
 
-3. **Hallucination Detection** (boolean): Does the answer contain any claims that contradict the context or are completely fabricated?
+3. **Hallucination Detection** (boolean): Does the answer contain any claims that \
+contradict the context or are completely fabricated?
    - true = Contains hallucinations
    - false = No hallucinations
 
-4. **Faithfulness Score** (0-1): Overall faithfulness (average of groundedness and citation coverage, penalized for hallucinations).
+4. **Faithfulness Score** (0-1): Overall faithfulness (average of groundedness and \
+citation coverage, penalized for hallucinations).
    - If hallucinations are present, multiply by 0.5.
 
 Return your evaluation as a JSON object with these exact keys:

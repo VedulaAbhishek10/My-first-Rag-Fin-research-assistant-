@@ -81,7 +81,7 @@ def evaluate_retrieval(
     Returns:
         RetrievalMetrics with aggregate scores.
     """
-    with open(benchmark_path, "r") as f:
+    with open(benchmark_path) as f:
         benchmark = json.load(f)
 
     queries = benchmark.get("queries", [])
@@ -111,9 +111,13 @@ def evaluate_retrieval(
         total_latency += elapsed_ms
 
         # Recall@K
-        retrieved_relevant_5 = [r for r in results[:5] if _is_relevant(r, relevant_metadata)]
-        retrieved_relevant_10 = [r for r in results[:10] if _is_relevant(r, relevant_metadata)]
-        
+        retrieved_relevant_5 = [
+            r for r in results[:5] if _is_relevant(r, relevant_metadata)
+        ]
+        retrieved_relevant_10 = [
+            r for r in results[:10] if _is_relevant(r, relevant_metadata)
+        ]
+
         if expected_relevant_count > 0:
             recall_5 = len(retrieved_relevant_5) / expected_relevant_count
             recall_10 = len(retrieved_relevant_10) / expected_relevant_count
@@ -140,7 +144,9 @@ def evaluate_retrieval(
         mrr_sum += reciprocal_rank
 
         # NDCG@10
-        relevance_scores = [1.0 if _is_relevant(r, relevant_metadata) else 0.0 for r in results[:10]]
+        relevance_scores = [
+            1.0 if _is_relevant(r, relevant_metadata) else 0.0 for r in results[:10]
+        ]
         ndcg_10 = ndcg_at_k(relevance_scores, 10)
         ndcg_10_sum += ndcg_10
 

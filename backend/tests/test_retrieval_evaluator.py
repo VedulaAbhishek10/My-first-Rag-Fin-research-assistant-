@@ -2,10 +2,10 @@ import json
 from unittest.mock import MagicMock
 
 from backend.evaluation.retrieval_evaluator import (
-    evaluate_retrieval,
-    dcg_at_k,
-    ndcg_at_k,
     RetrievalMetrics,
+    dcg_at_k,
+    evaluate_retrieval,
+    ndcg_at_k,
 )
 
 
@@ -45,7 +45,7 @@ def test_evaluate_retrieval(tmp_path):
 
     # Create a mock retriever
     mock_retriever = MagicMock()
-    
+
     # Mock results: doc1 (relevant), doc3 (irrelevant), doc2 (relevant)
     # We mock metadata instead of document_id because the evaluator matches on metadata
     mock_result_1 = MagicMock()
@@ -54,7 +54,7 @@ def test_evaluate_retrieval(tmp_path):
     mock_result_2.metadata = {"company": "Microsoft"}
     mock_result_3 = MagicMock()
     mock_result_3.metadata = {"company": "Apple Inc."}
-    
+
     mock_retriever.retrieve.return_value = [mock_result_1, mock_result_2, mock_result_3]
 
     # Run evaluation
@@ -63,15 +63,15 @@ def test_evaluate_retrieval(tmp_path):
     # Assertions
     assert isinstance(metrics, RetrievalMetrics)
     assert metrics.num_queries == 1
-    
+
     # Recall@5: retrieved 2 relevant. Expected 2. Recall = 2/2 = 1.0
     assert metrics.recall_at_5 == 1.0
-    
+
     # Precision@5: retrieved 3, relevant 2. Precision = 2/3 = 0.6667
     assert metrics.precision_at_5 == 0.6667
-    
+
     # MRR: first relevant is at rank 1. MRR = 1.0
     assert metrics.mrr == 1.0
-    
+
     # Hit Rate: 1.0
     assert metrics.hit_rate == 1.0

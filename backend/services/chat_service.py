@@ -8,15 +8,15 @@ Adds:
 - Structured observability traces
 """
 
-import time
 import logging
-from typing import AsyncGenerator
+import time
+from collections.abc import AsyncGenerator
 
 import anyio
 import httpx
 
 from backend.llm.ollama_client import OllamaClient
-from backend.llm.prompt_builder import build_messages, _format_context
+from backend.llm.prompt_builder import _format_context, build_messages
 from backend.logging_config import get_logger
 from backend.models.query import Citation, QueryResponse, SearchFilters, StreamChunk
 from backend.reranking.reranker import BaseReranker
@@ -178,7 +178,11 @@ class ChatService:
             logger.warning("No documents found for query: %s", question[:100])
             elapsed_ms = (time.perf_counter() - start_time) * 1000
             return QueryResponse(
-                answer="I cannot answer this question because no relevant financial documents were found in the system. Please try rephrasing your question or upload relevant documents.",
+                answer=(
+                    "I cannot answer this question because no relevant financial "
+                    "documents were found in the system. Please try rephrasing "
+                    "your question or upload relevant documents."
+                ),
                 citations=[],
                 session_id=session_id or "",
                 confidence=0.0,
@@ -337,7 +341,10 @@ class ChatService:
         # ── FAILURE HANDLING: Empty retrieval ──
         if num_retrieved == 0:
             logger.warning("No documents found for streaming query: %s", question[:100])
-            no_answer = "I cannot answer this question because no relevant financial documents were found in the system."
+            no_answer = (
+                "I cannot answer this question because no relevant financial "
+                "documents were found in the system."
+            )
             # Yield tokens one by one for consistent streaming UX
             for word in no_answer.split(" "):
                 yield StreamChunk(token=word + " ", citations=None, done=False)

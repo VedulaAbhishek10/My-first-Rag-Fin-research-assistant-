@@ -56,11 +56,13 @@ class NoOpReranker(BaseReranker):
 class CrossEncoderReranker(BaseReranker):
     """
     Cross-encoder reranker — uses a cross-encoder model to re-score results.
-    
+
     Used in Phase 2. Provides much higher accuracy than embedding similarity.
     """
 
-    def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2") -> None:
+    def __init__(
+        self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    ) -> None:
         # Determine the best device: prefer CUDA if the GPU is compatible,
         # otherwise force CPU.  The current PyTorch build requires compute
         # capability >= 7.5 (major >= 7 and minor >= 5).
@@ -79,11 +81,11 @@ class CrossEncoderReranker(BaseReranker):
     def rerank(self, query: str, results: list[SearchResult]) -> list[SearchResult]:
         if not results:
             return []
-        
+
         pairs = [[query, r.text] for r in results]
         scores = self.model.predict(pairs)
-        
+
         scored_results = list(zip(results, scores))
         scored_results.sort(key=lambda x: x[1], reverse=True)
-        
+
         return [result for result, score in scored_results]

@@ -188,7 +188,10 @@ class QueryResponse(BaseModel):
         default=1.0,
         ge=0.0,
         le=1.0,
-        description="Confidence score based on retrieval quality (0=no evidence, 1=high confidence)",
+        description=(
+            "Confidence score based on retrieval quality "
+            "(0=no evidence, 1=high confidence)"
+        ),
     )
     processing_time_ms: float
 

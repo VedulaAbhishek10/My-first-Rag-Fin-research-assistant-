@@ -19,17 +19,16 @@ from backend.api.dependencies import (
     get_hybrid_retriever,
     get_ollama_client,
 )
+from backend.evaluation.faithfulness_evaluator import (
+    print_faithfulness_metrics,
+    run_faithfulness_evaluation,
+)
 from backend.evaluation.retrieval_evaluator import (
     evaluate_retrieval,
     print_metrics,
 )
-from backend.evaluation.faithfulness_evaluator import (
-    run_faithfulness_evaluation,
-    print_faithfulness_metrics,
-)
-from backend.llm.prompt_builder import build_messages, _format_context
+from backend.llm.prompt_builder import _format_context, build_messages
 from backend.models.query import SearchFilters
-
 
 BENCHMARK_PATH = Path(__file__).parent / "benchmark_queries.json"
 
@@ -73,7 +72,7 @@ async def main() -> None:
             results["faithfulness"] = {"error": "Ollama not available"}
         else:
             test_cases = []
-            with open(BENCHMARK_PATH, "r") as f:
+            with open(BENCHMARK_PATH) as f:
                 benchmark = json.load(f)
 
             for query in benchmark.get("queries", [])[:5]:

@@ -12,7 +12,11 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 
-from backend.api.dependencies import get_database, get_ingestion_pipeline, get_vector_store
+from backend.api.dependencies import (
+    get_database,
+    get_ingestion_pipeline,
+    get_vector_store,
+)
 from backend.config import get_settings
 from backend.database.sqlite_db import SQLiteDatabase
 from backend.ingestion.pipeline import IngestionPipeline
@@ -138,10 +142,12 @@ async def delete_document(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Document '{document_id}' not found.",
         )
-    
+
     # Also remove from ChromaDB
     try:
         vector_store.delete_document(document_id)
     except Exception as e:
-        logger.error("Failed to delete document %s from vector store: %s", document_id, e)
-        # We don't raise an error here because the document is already deleted from SQLite
+        logger.error(
+            "Failed to delete document %s from vector store: %s", document_id, e
+        )
+        # We don't raise here; the document is already deleted from SQLite
