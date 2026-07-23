@@ -66,6 +66,18 @@ class ChatService:
         self._timeline_analyzer = timeline_analyzer
         self._query_entity_extractor = query_entity_extractor
 
+    def _merge_filters(
+        self,
+        explicit: SearchFilters,
+        inferred: SearchFilters,
+    ) -> SearchFilters:
+        """Merge inferred filters into explicit ones, letting explicit fields win."""
+        merged = explicit.model_dump()
+        for key, value in inferred.model_dump(exclude_none=True).items():
+            if merged.get(key) is None:
+                merged[key] = value
+        return SearchFilters(**merged)
+
     def _compute_confidence(
         self,
         results: list[SearchResult],
@@ -141,18 +153,24 @@ class ChatService:
             logging.INFO,
             "Timeline analysis",
             question=question[:100],
-            needs_timeline=timeline.needs_timeline,
+            needs_timeline=timeline.enabled,
             period_count=timeline.period_count(),
         )
 
-        # Extract filters if not provided
+        # Merge explicit filters with inferred ones (explicit fields win)
+        inferred_filters = self._query_entity_extractor.extract(question)
         if filters is None:
-            filters = self._query_entity_extractor.extract(question)
+            filters = inferred_filters
+        elif inferred_filters is not None:
+            filters = self._merge_filters(filters, inferred_filters)
+        if inferred_filters is not None:
             logger.structured(
                 logging.INFO,
                 "Query entity extraction",
                 question=question[:100],
-                extracted_filters=filters.to_dict() if filters else None,
+                extracted_filters=(
+                    filters.model_dump(exclude_none=True) if filters else None
+                ),
             )
 
         # Retrieve relevant chunks
@@ -311,14 +329,20 @@ class ChatService:
         # Analyze timeline
         timeline = self._timeline_analyzer.analyze(question)
 
-        # Extract filters if not provided
+        # Merge explicit filters with inferred ones (explicit fields win)
+        inferred_filters = self._query_entity_extractor.extract(question)
         if filters is None:
-            filters = self._query_entity_extractor.extract(question)
+            filters = inferred_filters
+        elif inferred_filters is not None:
+            filters = self._merge_filters(filters, inferred_filters)
+        if inferred_filters is not None:
             logger.structured(
                 logging.INFO,
                 "Stream query entity extraction",
                 question=question[:100],
-                extracted_filters=filters.to_dict() if filters else None,
+                extracted_filters=(
+                    filters.model_dump(exclude_none=True) if filters else None
+                ),
             )
 
         # Retrieve

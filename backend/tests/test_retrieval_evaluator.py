@@ -1,5 +1,8 @@
 import json
+import math
 from unittest.mock import MagicMock
+
+import pytest
 
 from backend.evaluation.retrieval_evaluator import (
     RetrievalMetrics,
@@ -10,11 +13,10 @@ from backend.evaluation.retrieval_evaluator import (
 
 
 def test_dcg_at_k():
-    # Standard DCG example
+    # Standard DCG example: rel_i / log2(rank + 1), rank starting at 1
     rels = [3, 2, 3, 0, 1, 2]
-    # DCG = 3/1 + 2/1.585 + 3/2.585 + 0 + 1/4.321 + 2/5.044
-    expected = 3.0 + (2.0 / 1.585) + (3.0 / 2.585) + 0.0 + (1.0 / 4.321) + (2.0 / 5.044)
-    assert dcg_at_k(rels, 6) == expected
+    expected = sum(rel / math.log2(i + 2) for i, rel in enumerate(rels))
+    assert dcg_at_k(rels, 6) == pytest.approx(expected)
 
 
 def test_ndcg_at_k():

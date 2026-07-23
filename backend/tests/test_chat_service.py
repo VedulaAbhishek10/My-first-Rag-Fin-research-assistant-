@@ -45,10 +45,10 @@ def _make_service(answer: str = "Test answer.") -> ChatService:
     return ChatService(
         retriever=mock_retriever,
         reranker=NoOpReranker(),
-        llm=mock_llm,
+        ollama_client=mock_llm,
         memory=ConversationMemory(),
         query_entity_extractor=QueryEntityExtractor(),
-        timeline_query_analyzer=TimelineQueryAnalyzer(),
+        timeline_analyzer=TimelineQueryAnalyzer(),
     )
 
 
